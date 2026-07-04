@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student ID Card Generator — Free & Instant | Krunto</title>
+<meta name="description" content="Create a professional student ID card in seconds. Add photo, name, roll number, course, and institute — download as PNG or PDF, free and private.">
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  :root{
+    --ink:#161b22; --paper:#f7f7f5; --card:#ffffff; --line:#e3e2dd;
+    --accent:#1f5f5b; --accent-dim:#e8f0ef; --accent-ink:#0f3d3a; --muted:#6b6f76;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Segoe UI', system-ui, -apple-system, sans-serif; background:var(--paper); color:var(--ink); line-height:1.5; }
+  header{ padding:28px 20px 20px; text-align:center; border-bottom:1px solid var(--line); background:var(--card); }
+  header a.home{ display:inline-block; font-size:13px; color:var(--muted); text-decoration:none; margin-bottom:10px; }
+  header a.home:hover{ color:var(--accent-ink); }
+  h1{ font-size:28px; margin:0 0 6px; letter-spacing:-0.02em; }
+  header p{ color:var(--muted); margin:0; font-size:15px; }
+
+  main{ max-width:1080px; margin:0 auto; padding:28px 20px 60px; }
+  .layout{ display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
+  @media (max-width:860px){ .layout{ grid-template-columns:1fr; } }
+
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .field{ flex:1; min-width:150px; display:flex; flex-direction:column; gap:5px; }
+  label{ font-size:12.5px; font-weight:600; color:var(--muted); }
+  input, select{ padding:9px 10px; border:1px solid var(--line); border-radius:8px; font-size:14px; font-family:inherit; background:#fff; width:100%; }
+
+  .photo-upload{
+    border:2px dashed #c7cdd6; border-radius:10px; padding:18px; text-align:center;
+    cursor:pointer; background:#fbfbfa; font-size:13px; color:var(--muted);
+  }
+  .photo-upload.drag{ border-color:var(--accent); background:var(--accent-dim); }
+  .photo-upload input{ display:none; }
+  .photo-thumb{ width:70px; height:80px; object-fit:cover; border-radius:6px; margin:0 auto 8px; display:block; border:1px solid var(--line); }
+
+  .template-picker{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .template-swatch{
+    width:60px; height:38px; border-radius:6px; cursor:pointer; border:2px solid transparent;
+    display:flex; align-items:center; justify-content:center; font-size:10px; color:#fff; font-weight:700;
+  }
+  .template-swatch.active{ border-color:var(--ink); }
+
+  .actions{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+  button.primary{ background:var(--accent); color:#fff; border:none; padding:13px 24px; border-radius:9px; font-size:15px; font-weight:700; cursor:pointer; flex:1; }
+  button.primary:hover{ background:var(--accent-ink); }
+  button.secondary{ background:none; border:1px solid var(--line); padding:13px 20px; border-radius:9px; font-size:14px; font-weight:600; cursor:pointer; color:var(--muted); }
+  button.secondary:hover{ border-color:var(--accent); color:var(--accent-ink); }
+
+  .preview-col{ position:sticky; top:16px; display:flex; flex-direction:column; align-items:center; }
+  #cardCanvas{ width:100%; max-width:400px; border-radius:14px; box-shadow:0 4px 20px rgba(0,0,0,.12); }
+  .flip-hint{ font-size:12.5px; color:var(--muted); margin-top:10px; }
+
+  .ad-slot{ text-align:center; margin:26px 0; min-height:90px; }
+  .info-block{ margin-top:36px; }
+  .info-block h2{ font-size:18px; margin-bottom:8px; }
+  .info-block p{ color:var(--muted); font-size:14.5px; }
+  footer{ text-align:center; padding:24px; color:var(--muted); font-size:13px; }
+  footer a{ color:var(--accent-ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="home" href="index.html">← All Krunto tools</a>
+  <h1>Student ID Card Generator</h1>
+  <p>Fill in the details, upload a photo, and download a print-ready ID card — free and instant.</p>
+</header>
+
+<main>
+  <div class="layout">
+
+    <div class="panel">
+      <div class="template-picker" id="templatePicker">
+        <div class="template-swatch active" data-color="#1f5f5b" style="background:#1f5f5b">Teal</div>
+        <div class="template-swatch" data-color="#1e3a8a" style="background:#1e3a8a">Navy</div>
+        <div class="template-swatch" data-color="#7c2d12" style="background:#7c2d12">Maroon</div>
+        <div class="template-swatch" data-color="#3f3f46" style="background:#3f3f46">Charcoal</div>
+        <div class="template-swatch" data-color="#166534" style="background:#166534">Green</div>
+      </div>
+
+      <div class="photo-upload" id="photoUpload">
+        <img id="photoThumb" class="photo-thumb" style="display:none">
+        <div id="uploadText">📷 Click to upload student photo</div>
+        <input type="file" id="photoInput" accept="image/*">
+      </div>
+
+      <div class="row" style="margin-top:14px;">
+        <div class="field"><label>Full name</label><input id="studentName" placeholder="Ahmed Raza"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Institute / School name</label><input id="instituteName" placeholder="Punjab Public College"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Roll / Registration No.</label><input id="rollNo" placeholder="2026-CS-045"></div>
+        <div class="field"><label>Class / Course</label><input id="course" placeholder="BSc Computer Science"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Blood group (optional)</label><input id="bloodGroup" placeholder="O+"></div>
+        <div class="field"><label>Valid until</label><input id="validUntil" placeholder="June 2027"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Contact / Emergency no. (optional)</label><input id="contactNo" placeholder="+92 300 1234567"></div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="downloadPngBtn">Download PNG</button>
+        <button class="secondary" id="downloadPdfBtn">Download PDF</button>
+      </div>
+    </div>
+
+    <div class="preview-col">
+      <canvas id="cardCanvas" width="640" height="404"></canvas>
+      <div class="flip-hint">Standard ID card size (CR80, 3.375 × 2.125 in)</div>
+    </div>
+
+  </div>
+
+  <div class="ad-slot">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  </div>
+
+  <div class="info-block">
+    <h2>Why use this tool</h2>
+    <p>Schools, colleges, and coaching centers often need quick ID cards for events, temporary passes, or small batches without expensive design software. Fill the form, pick a color theme, and your card renders live in standard CR80 card proportions — the same size as a bank card — ready to print or laminate. Everything happens in your browser, so student photos and details are never uploaded anywhere.</p>
+  </div>
+</main>
+
+<footer>
+  <a href="index.html">More free tools on Krunto</a>
+</footer>
+
+<script>
+const canvas = document.getElementById('cardCanvas');
+const ctx = canvas.getContext('2d');
+let photoImg = null;
+let themeColor = '#1f5f5b';
+
+const photoUpload = document.getElementById('photoUpload');
+const photoInput = document.getElementById('photoInput');
+const photoThumb = document.getElementById('photoThumb');
+const uploadText = document.getElementById('uploadText');
+
+photoUpload.addEventListener('click', () => photoInput.click());
+photoUpload.addEventListener('dragover', e => { e.preventDefault(); photoUpload.classList.add('drag'); });
+photoUpload.addEventListener('dragleave', () => photoUpload.classList.remove('drag'));
+photoUpload.addEventListener('drop', e => {
+  e.preventDefault(); photoUpload.classList.remove('drag');
+  if(e.dataTransfer.files[0]) loadPhoto(e.dataTransfer.files[0]);
+});
+photoInput.addEventListener('change', e => { if(e.target.files[0]) loadPhoto(e.target.files[0]); });
+
+function loadPhoto(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      photoImg = img;
+      photoThumb.src = e.target.result;
+      photoThumb.style.display = 'block';
+      uploadText.textContent = 'Click to change photo';
+      drawCard();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('templatePicker').addEventListener('click', e => {
+  const swatch = e.target.closest('.template-swatch');
+  if(!swatch) return;
+  document.querySelectorAll('.template-swatch').forEach(s => s.classList.remove('active'));
+  swatch.classList.add('active');
+  themeColor = swatch.dataset.color;
+  drawCard();
+});
+
+['studentName','instituteName','rollNo','course','bloodGroup','validUntil','contactNo'].forEach(id => {
+  document.getElementById(id).addEventListener('input', drawCard);
+});
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+function drawCard(){
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Card background
+  ctx.fillStyle = '#ffffff';
+  roundRect(ctx, 0, 0, W, H, 22);
+  ctx.fill();
+  ctx.save();
+  roundRect(ctx, 0, 0, W, H, 22);
+  ctx.clip();
+
+  // Top color band
+  ctx.fillStyle = themeColor;
+  ctx.fillRect(0, 0, W, 96);
+
+  // Institute name
+  const instituteName = document.getElementById('instituteName').value || 'Your Institute Name';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 26px Georgia, serif';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(instituteName, 26, 40);
+  ctx.font = '13px Segoe UI, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText('STUDENT IDENTITY CARD', 26, 70);
+
+  // Bottom accent strip
+  ctx.fillStyle = themeColor;
+  ctx.fillRect(0, H-14, W, 14);
+
+  // Photo box
+  const photoX = 26, photoY = 120, photoW = 130, photoH = 160;
+  ctx.fillStyle = '#eeeeee';
+  ctx.fillRect(photoX, photoY, photoW, photoH);
+  if(photoImg){
+    const scale = Math.max(photoW/photoImg.width, photoH/photoImg.height);
+    const dw = photoImg.width*scale, dh = photoImg.height*scale;
+    ctx.drawImage(photoImg, photoX - (dw-photoW)/2, photoY - (dh-photoH)/2, dw, dh);
+  } else {
+    ctx.fillStyle = '#bbb';
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PHOTO', photoX+photoW/2, photoY+photoH/2);
+    ctx.textAlign = 'left';
+  }
+  ctx.strokeStyle = themeColor;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(photoX, photoY, photoW, photoH);
+
+  // Details
+  const name = document.getElementById('studentName').value || 'Student Name';
+  const roll = document.getElementById('rollNo').value;
+  const course = document.getElementById('course').value;
+  const blood = document.getElementById('bloodGroup').value;
+  const valid = document.getElementById('validUntil').value;
+  const contact = document.getElementById('contactNo').value;
+
+  let dx = photoX + photoW + 24;
+  let dy = 130;
+
+  ctx.fillStyle = '#161b22';
+  ctx.font = 'bold 20px Segoe UI, sans-serif';
+  ctx.fillText(name, dx, dy);
+  dy += 30;
+
+  ctx.font = '13px Segoe UI, sans-serif';
+  ctx.fillStyle = '#6b6f76';
+
+  function detailLine(labelText, value){
+    if(!value) return;
+    ctx.fillStyle = '#6b6f76';
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.fillText(labelText.toUpperCase(), dx, dy);
+    dy += 15;
+    ctx.fillStyle = '#161b22';
+    ctx.font = '14px Segoe UI, sans-serif';
+    ctx.fillText(value, dx, dy);
+    dy += 22;
+  }
+
+  detailLine('Roll / Reg. No.', roll);
+  detailLine('Course', course);
+  detailLine('Blood Group', blood);
+  detailLine('Valid Until', valid);
+  detailLine('Emergency Contact', contact);
+
+  ctx.restore();
+}
+
+drawCard();
+
+document.getElementById('downloadPngBtn').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'student-id-card.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+  const { jsPDF } = window.jspdf;
+  // CR80 card size in points: 3.375in x 2.125in => 243pt x 153pt
+  const pdf = new jsPDF({ orientation:'landscape', unit:'pt', format:[243,153] });
+  const imgData = canvas.toDataURL('image/png');
+  pdf.addImage(imgData, 'PNG', 0, 0, 243, 153);
+  pdf.save('student-id-card.pdf');
+});
+</script>
+
+</body>
+</html>
