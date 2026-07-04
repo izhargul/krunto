@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7143130602873663" crossorigin="anonymous"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Text to Speech - Read Text Aloud Online | Krunto</title>
+<meta name="description" content="Free text to speech tool. Type or paste any text and have it read aloud instantly using natural voices, right in your browser.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FBFAF6;--ink:#1F2321;--teal:#1F6F5C;--gold:#E8A33D;--card:#F1EFE7;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;}
+  a{color:inherit;text-decoration:none;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:28px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:600;font-size:1.4rem;}
+  .back{font-weight:500;font-size:0.9rem;color:var(--teal);}
+  main{max-width:640px;margin:0 auto;padding:20px 6vw 100px;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:2rem;margin-bottom:8px;}
+  .sub{color:#666;margin-bottom:32px;}
+  textarea{width:100%;min-height:180px;padding:18px;border:1px solid #ddd;border-radius:16px;font-family:'Inter',sans-serif;font-size:1.05rem;resize:vertical;background:#fff;}
+  .controls{background:var(--card);border-radius:18px;padding:24px;margin-top:20px;}
+  .row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+  .row>div{flex:1;min-width:140px;}
+  label{display:block;font-weight:600;font-size:0.85rem;margin-bottom:6px;}
+  select,input[type=range]{width:100%;padding:8px;border-radius:10px;border:1px solid #ddd;background:#fff;}
+  .btns{display:flex;gap:12px;margin-top:8px;}
+  button{background:var(--teal);color:#fff;border:none;padding:12px 24px;border-radius:30px;font-weight:600;font-size:0.95rem;cursor:pointer;}
+  button.secondary{background:transparent;color:var(--teal);border:1px solid var(--teal);}
+  .note{margin-top:50px;font-size:0.95rem;color:#555;}
+  .adspace{margin-top:40px;padding:24px;text-align:center;border:1px dashed #ccc;border-radius:12px;color:#aaa;font-size:0.85rem;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Krunto</div>
+  <a class="back" href="index.html">← All tools</a>
+</header>
+<main>
+  <h1>Text to Speech</h1>
+  <p class="sub">Type or paste any text and have it read aloud instantly, using your device's built-in natural voices — completely free.</p>
+
+  <textarea id="text" placeholder="Type or paste text here...">Welcome to Krunto — free tools that make your work easier.</textarea>
+
+  <div class="controls">
+    <div class="row">
+      <div>
+        <label>Voice</label>
+        <select id="voice"></select>
+      </div>
+      <div>
+        <label>Speed <span id="rateVal">1x</span></label>
+        <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+      </div>
+      <div>
+        <label>Pitch <span id="pitchVal">1</span></label>
+        <input type="range" id="pitch" min="0" max="2" step="0.1" value="1">
+      </div>
+    </div>
+    <div class="btns">
+      <button onclick="speak()">▶ Play</button>
+      <button class="secondary" onclick="stopSpeak()">■ Stop</button>
+    </div>
+  </div>
+
+  <div class="adspace">Ad space</div>
+
+  <div class="note">
+    <p><strong>How it works:</strong> this tool uses your browser's built-in speech engine, so voices and quality vary a little depending on whether you're on Chrome, Safari, Edge, or a phone — but it's completely free with no limits, and nothing you type is ever sent anywhere.</p>
+  </div>
+</main>
+<script>
+let voices=[];
+function loadVoices(){
+  voices=speechSynthesis.getVoices();
+  const sel=document.getElementById('voice');
+  sel.innerHTML='';
+  voices.forEach((v,i)=>{
+    const opt=document.createElement('option');
+    opt.value=i; opt.textContent=`${v.name} (${v.lang})`;
+    sel.appendChild(opt);
+  });
+}
+speechSynthesis.onvoiceschanged=loadVoices;
+loadVoices();
+
+document.getElementById('rate').addEventListener('input',e=>document.getElementById('rateVal').textContent=e.target.value+'x');
+document.getElementById('pitch').addEventListener('input',e=>document.getElementById('pitchVal').textContent=e.target.value);
+
+function speak(){
+  stopSpeak();
+  const utter=new SpeechSynthesisUtterance(document.getElementById('text').value);
+  const idx=document.getElementById('voice').value;
+  if(voices[idx]) utter.voice=voices[idx];
+  utter.rate=parseFloat(document.getElementById('rate').value);
+  utter.pitch=parseFloat(document.getElementById('pitch').value);
+  speechSynthesis.speak(utter);
+}
+function stopSpeak(){
+  speechSynthesis.cancel();
+}
+</script>
+</body>
+</html>
