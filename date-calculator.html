@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Resizer — Free & Instant | Krunto</title>
-<meta name="description" content="Resize any image to exact pixel dimensions or a percentage scale, then download — free and private, works in your browser.">
+<title>Date Calculator — Days Between Dates & Countdown | Krunto</title>
+<meta name="description" content="Calculate the number of days, weeks, months, and years between two dates, or count down to a future date.">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
 <style>
@@ -68,30 +68,33 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <header>
   <a class="home" href="index.html">&larr; All Krunto tools</a>
-  <h1>Image Resizer</h1>
-  <p class="sub">Resize images to exact dimensions or a percentage — with locked aspect ratio.</p>
+  <h1>Date Calculator</h1>
+  <p class="sub">Find the difference between two dates, or count down to a future date.</p>
 </header>
 
 <main>
 
   <div class="panel">
-    <input type="file" id="fileInput" accept="image/*" style="margin-bottom:14px;">
-    <div id="editorArea" style="display:none;">
-      <img id="previewImg" style="max-width:100%; border-radius:8px; border:1px solid var(--line); margin-bottom:14px;">
+    <div class="chip-row" id="modeChips">
+      <span class="chip active" data-mode="diff">Difference between two dates</span>
+      <span class="chip" data-mode="countdown">Countdown to a date</span>
+    </div>
+
+    <div id="diffMode">
       <div class="row">
-        <div class="field"><label>Width (px)</label><input type="number" id="widthInput"></div>
-        <div class="field"><label>Height (px)</label><input type="number" id="heightInput"></div>
+        <div class="field"><label>Start date</label><input type="date" id="startDate"></div>
+        <div class="field"><label>End date</label><input type="date" id="endDate"></div>
       </div>
-      <div class="chip-row">
-        <span class="chip active" id="lockRatio">🔒 Lock aspect ratio</span>
+    </div>
+    <div id="countdownMode" style="display:none">
+      <div class="row">
+        <div class="field"><label>Target date</label><input type="date" id="targetDate"></div>
       </div>
-      <div class="field" style="margin-top:14px;">
-        <label>Or scale by percentage: <span class="range-val" id="scaleVal">100</span>%</label>
-        <div class="range-row"><input type="range" id="scaleRange" min="10" max="200" value="100"></div>
-      </div>
-      <div class="actions" style="margin-top:16px;">
-        <button class="primary" id="downloadBtn">Download resized image</button>
-      </div>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-main" id="resultMain">—</div>
+      <div class="result-list" id="resultList"></div>
     </div>
   </div>
   
@@ -108,66 +111,68 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <script>
 
-  let img = null, origW = 0, origH = 0, ratioLocked = true;
-  const fileInput = document.getElementById('fileInput');
-  const widthInput = document.getElementById('widthInput');
-  const heightInput = document.getElementById('heightInput');
-  const scaleRange = document.getElementById('scaleRange');
+  const chips = document.querySelectorAll('#modeChips .chip');
+  let mode = 'diff';
+  chips.forEach(c => c.addEventListener('click', () => {
+    chips.forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    mode = c.dataset.mode;
+    document.getElementById('diffMode').style.display = mode==='diff' ? 'block':'none';
+    document.getElementById('countdownMode').style.display = mode==='countdown' ? 'block':'none';
+    compute();
+  }));
 
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const image = new Image();
-      image.onload = () => {
-        img = image; origW = image.width; origH = image.height;
-        widthInput.value = origW; heightInput.value = origH;
-        document.getElementById('previewImg').src = ev.target.result;
-        document.getElementById('editorArea').style.display = 'block';
-      };
-      image.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
+  const startDate = document.getElementById('startDate');
+  const endDate = document.getElementById('endDate');
+  const targetDate = document.getElementById('targetDate');
+  const today = new Date();
+  startDate.valueAsDate = today;
+  targetDate.valueAsDate = today;
 
-  document.getElementById('lockRatio').addEventListener('click', function(){
-    ratioLocked = !ratioLocked;
-    this.classList.toggle('active');
-    this.textContent = ratioLocked ? '🔒 Lock aspect ratio' : '🔓 Aspect ratio unlocked';
-  });
+  [startDate, endDate, targetDate].forEach(el => el.addEventListener('input', compute));
 
-  widthInput.addEventListener('input', () => {
-    if(ratioLocked && origW) heightInput.value = Math.round(widthInput.value * (origH/origW));
-  });
-  heightInput.addEventListener('input', () => {
-    if(ratioLocked && origH) widthInput.value = Math.round(heightInput.value * (origW/origH));
-  });
+  function breakdown(a, b){
+    let years = b.getFullYear() - a.getFullYear();
+    let months = b.getMonth() - a.getMonth();
+    let days = b.getDate() - a.getDate();
+    if(days < 0){ months -= 1; days += new Date(b.getFullYear(), b.getMonth(), 0).getDate(); }
+    if(months < 0){ months += 12; years -= 1; }
+    return { years, months, days };
+  }
 
-  scaleRange.addEventListener('input', () => {
-    document.getElementById('scaleVal').textContent = scaleRange.value;
-    if(origW){
-      widthInput.value = Math.round(origW * (scaleRange.value/100));
-      heightInput.value = Math.round(origH * (scaleRange.value/100));
+  function compute(){
+    const box = document.getElementById('resultBox');
+    if(mode === 'diff'){
+      if(!startDate.value || !endDate.value){ box.classList.remove('show'); return; }
+      let a = new Date(startDate.value), b = new Date(endDate.value);
+      const swapped = a > b;
+      if(swapped) [a,b] = [b,a];
+      const bd = breakdown(a,b);
+      const totalDays = Math.round((b-a)/86400000);
+      document.getElementById('resultMain').textContent = `${bd.years}y ${bd.months}m ${bd.days}d`;
+      document.getElementById('resultList').innerHTML = `
+        <div><span>Total days</span><span>${totalDays.toLocaleString()}</span></div>
+        <div><span>Total weeks</span><span>${(totalDays/7).toFixed(1)}</span></div>
+      `;
+      box.classList.add('show');
+    } else {
+      if(!targetDate.value){ box.classList.remove('show'); return; }
+      const now = new Date();
+      const target = new Date(targetDate.value);
+      const diffMs = target - now;
+      const isPast = diffMs < 0;
+      const totalDays = Math.abs(Math.ceil(diffMs/86400000));
+      document.getElementById('resultMain').textContent = isPast
+        ? `${totalDays} days ago`
+        : `${totalDays} days to go`;
+      document.getElementById('resultList').innerHTML = `
+        <div><span>Weeks</span><span>${(totalDays/7).toFixed(1)}</span></div>
+        <div><span>Months (approx.)</span><span>${(totalDays/30.44).toFixed(1)}</span></div>
+      `;
+      box.classList.add('show');
     }
-  });
-
-  document.getElementById('downloadBtn').addEventListener('click', () => {
-    if(!img) return;
-    const w = parseInt(widthInput.value) || origW;
-    const h = parseInt(heightInput.value) || origH;
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `resized-${w}x${h}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
-  });
+  }
+  compute();
   
 </script>
 

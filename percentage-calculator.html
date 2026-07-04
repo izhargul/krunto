@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Resizer — Free & Instant | Krunto</title>
-<meta name="description" content="Resize any image to exact pixel dimensions or a percentage scale, then download — free and private, works in your browser.">
+<title>Percentage Calculator — Free & Instant | Krunto</title>
+<meta name="description" content="Calculate percentages instantly: find X percent of Y, what percent X is of Y, or the percentage change between two numbers.">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
 <style>
@@ -68,31 +68,47 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <header>
   <a class="home" href="index.html">&larr; All Krunto tools</a>
-  <h1>Image Resizer</h1>
-  <p class="sub">Resize images to exact dimensions or a percentage — with locked aspect ratio.</p>
+  <h1>Percentage Calculator</h1>
+  <p class="sub">Three calculators in one — percentage of a number, percentage ratio, and percentage change.</p>
 </header>
 
 <main>
 
   <div class="panel">
-    <input type="file" id="fileInput" accept="image/*" style="margin-bottom:14px;">
-    <div id="editorArea" style="display:none;">
-      <img id="previewImg" style="max-width:100%; border-radius:8px; border:1px solid var(--line); margin-bottom:14px;">
+    <div class="chip-row" id="modeChips">
+      <span class="chip active" data-mode="of">X% of Y</span>
+      <span class="chip" data-mode="ratio">X is what % of Y</span>
+      <span class="chip" data-mode="change">% change from X to Y</span>
+    </div>
+
+    <div id="modeOf">
       <div class="row">
-        <div class="field"><label>Width (px)</label><input type="number" id="widthInput"></div>
-        <div class="field"><label>Height (px)</label><input type="number" id="heightInput"></div>
-      </div>
-      <div class="chip-row">
-        <span class="chip active" id="lockRatio">🔒 Lock aspect ratio</span>
-      </div>
-      <div class="field" style="margin-top:14px;">
-        <label>Or scale by percentage: <span class="range-val" id="scaleVal">100</span>%</label>
-        <div class="range-row"><input type="range" id="scaleRange" min="10" max="200" value="100"></div>
-      </div>
-      <div class="actions" style="margin-top:16px;">
-        <button class="primary" id="downloadBtn">Download resized image</button>
+        <div class="field"><label>Percentage (%)</label><input type="number" id="ofPercent" placeholder="15"></div>
+        <div class="field"><label>Of number</label><input type="number" id="ofNumber" placeholder="200"></div>
       </div>
     </div>
+    <div id="modeRatio" style="display:none">
+      <div class="row">
+        <div class="field"><label>Number (X)</label><input type="number" id="ratioX" placeholder="30"></div>
+        <div class="field"><label>Out of (Y)</label><input type="number" id="ratioY" placeholder="200"></div>
+      </div>
+    </div>
+    <div id="modeChange" style="display:none">
+      <div class="row">
+        <div class="field"><label>From value</label><input type="number" id="changeX" placeholder="80"></div>
+        <div class="field"><label>To value</label><input type="number" id="changeY" placeholder="100"></div>
+      </div>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-main" id="resultMain">—</div>
+      <div class="result-sub" id="resultSub"></div>
+    </div>
+  </div>
+
+  <div class="info-block">
+    <h2>How it's calculated</h2>
+    <p>"X% of Y" multiplies Y by X/100. "X is what percent of Y" divides X by Y and multiplies by 100. "Percentage change" takes (Y minus X) divided by X, multiplied by 100 — a positive result is an increase, negative is a decrease.</p>
   </div>
   
 
@@ -108,66 +124,50 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <script>
 
-  let img = null, origW = 0, origH = 0, ratioLocked = true;
-  const fileInput = document.getElementById('fileInput');
-  const widthInput = document.getElementById('widthInput');
-  const heightInput = document.getElementById('heightInput');
-  const scaleRange = document.getElementById('scaleRange');
+  const chips = document.querySelectorAll('#modeChips .chip');
+  let mode = 'of';
+  chips.forEach(c => c.addEventListener('click', () => {
+    chips.forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    mode = c.dataset.mode;
+    document.getElementById('modeOf').style.display = mode==='of' ? 'block':'none';
+    document.getElementById('modeRatio').style.display = mode==='ratio' ? 'block':'none';
+    document.getElementById('modeChange').style.display = mode==='change' ? 'block':'none';
+    compute();
+  }));
 
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const image = new Image();
-      image.onload = () => {
-        img = image; origW = image.width; origH = image.height;
-        widthInput.value = origW; heightInput.value = origH;
-        document.getElementById('previewImg').src = ev.target.result;
-        document.getElementById('editorArea').style.display = 'block';
-      };
-      image.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
+  ['ofPercent','ofNumber','ratioX','ratioY','changeX','changeY'].forEach(id => {
+    document.getElementById(id).addEventListener('input', compute);
   });
 
-  document.getElementById('lockRatio').addEventListener('click', function(){
-    ratioLocked = !ratioLocked;
-    this.classList.toggle('active');
-    this.textContent = ratioLocked ? '🔒 Lock aspect ratio' : '🔓 Aspect ratio unlocked';
-  });
-
-  widthInput.addEventListener('input', () => {
-    if(ratioLocked && origW) heightInput.value = Math.round(widthInput.value * (origH/origW));
-  });
-  heightInput.addEventListener('input', () => {
-    if(ratioLocked && origH) widthInput.value = Math.round(heightInput.value * (origW/origH));
-  });
-
-  scaleRange.addEventListener('input', () => {
-    document.getElementById('scaleVal').textContent = scaleRange.value;
-    if(origW){
-      widthInput.value = Math.round(origW * (scaleRange.value/100));
-      heightInput.value = Math.round(origH * (scaleRange.value/100));
+  function compute(){
+    const box = document.getElementById('resultBox');
+    const main = document.getElementById('resultMain');
+    const sub = document.getElementById('resultSub');
+    if(mode === 'of'){
+      const p = parseFloat(document.getElementById('ofPercent').value);
+      const n = parseFloat(document.getElementById('ofNumber').value);
+      if(isNaN(p) || isNaN(n)){ box.classList.remove('show'); return; }
+      const r = (p/100)*n;
+      main.textContent = r.toLocaleString(undefined,{maximumFractionDigits:4});
+      sub.textContent = `${p}% of ${n} is ${r.toLocaleString()}`;
+    } else if(mode === 'ratio'){
+      const x = parseFloat(document.getElementById('ratioX').value);
+      const y = parseFloat(document.getElementById('ratioY').value);
+      if(isNaN(x) || isNaN(y) || y===0){ box.classList.remove('show'); return; }
+      const r = (x/y)*100;
+      main.textContent = r.toLocaleString(undefined,{maximumFractionDigits:4}) + '%';
+      sub.textContent = `${x} is ${r.toFixed(2)}% of ${y}`;
+    } else {
+      const x = parseFloat(document.getElementById('changeX').value);
+      const y = parseFloat(document.getElementById('changeY').value);
+      if(isNaN(x) || isNaN(y) || x===0){ box.classList.remove('show'); return; }
+      const r = ((y-x)/x)*100;
+      main.textContent = (r>=0?'+':'') + r.toLocaleString(undefined,{maximumFractionDigits:4}) + '%';
+      sub.textContent = r>=0 ? `Increase of ${r.toFixed(2)}%` : `Decrease of ${Math.abs(r).toFixed(2)}%`;
     }
-  });
-
-  document.getElementById('downloadBtn').addEventListener('click', () => {
-    if(!img) return;
-    const w = parseInt(widthInput.value) || origW;
-    const h = parseInt(heightInput.value) || origH;
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `resized-${w}x${h}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
-  });
+    box.classList.add('show');
+  }
   
 </script>
 

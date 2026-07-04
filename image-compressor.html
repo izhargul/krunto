@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Resizer — Free & Instant | Krunto</title>
-<meta name="description" content="Resize any image to exact pixel dimensions or a percentage scale, then download — free and private, works in your browser.">
+<title>Image Compressor — Free & Instant | Krunto</title>
+<meta name="description" content="Compress JPG and PNG images to a smaller file size with an adjustable quality slider — free, private, works in your browser.">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
 <style>
@@ -68,29 +68,28 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <header>
   <a class="home" href="index.html">&larr; All Krunto tools</a>
-  <h1>Image Resizer</h1>
-  <p class="sub">Resize images to exact dimensions or a percentage — with locked aspect ratio.</p>
+  <h1>Image Compressor</h1>
+  <p class="sub">Shrink image file size with an adjustable quality slider — see the size before you download.</p>
 </header>
 
 <main>
 
   <div class="panel">
-    <input type="file" id="fileInput" accept="image/*" style="margin-bottom:14px;">
+    <div class="photo-upload-wrap">
+      <input type="file" id="fileInput" accept="image/*" style="margin-bottom:14px;">
+    </div>
     <div id="editorArea" style="display:none;">
-      <img id="previewImg" style="max-width:100%; border-radius:8px; border:1px solid var(--line); margin-bottom:14px;">
-      <div class="row">
-        <div class="field"><label>Width (px)</label><input type="number" id="widthInput"></div>
-        <div class="field"><label>Height (px)</label><input type="number" id="heightInput"></div>
+      <img id="previewImg" style="max-width:100%; border-radius:8px; border:1px solid var(--line);">
+      <div class="field" style="margin-top:16px;">
+        <label>Quality: <span class="range-val" id="qualityVal">80</span>%</label>
+        <div class="range-row"><input type="range" id="qualityRange" min="10" max="100" value="80"></div>
       </div>
-      <div class="chip-row">
-        <span class="chip active" id="lockRatio">🔒 Lock aspect ratio</span>
+      <div class="result-list" style="margin-top:10px;">
+        <div><span>Original size</span><span id="origSize">—</span></div>
+        <div><span>Compressed size</span><span id="compSize">—</span></div>
       </div>
-      <div class="field" style="margin-top:14px;">
-        <label>Or scale by percentage: <span class="range-val" id="scaleVal">100</span>%</label>
-        <div class="range-row"><input type="range" id="scaleRange" min="10" max="200" value="100"></div>
-      </div>
-      <div class="actions" style="margin-top:16px;">
-        <button class="primary" id="downloadBtn">Download resized image</button>
+      <div class="actions" style="margin-top:14px;">
+        <button class="primary" id="downloadBtn">Download compressed image</button>
       </div>
     </div>
   </div>
@@ -108,65 +107,61 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <script>
 
-  let img = null, origW = 0, origH = 0, ratioLocked = true;
+  let img = null, origFile = null;
   const fileInput = document.getElementById('fileInput');
-  const widthInput = document.getElementById('widthInput');
-  const heightInput = document.getElementById('heightInput');
-  const scaleRange = document.getElementById('scaleRange');
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
 
   fileInput.addEventListener('change', e => {
     const file = e.target.files[0];
     if(!file) return;
+    origFile = file;
     const reader = new FileReader();
     reader.onload = ev => {
       const image = new Image();
       image.onload = () => {
-        img = image; origW = image.width; origH = image.height;
-        widthInput.value = origW; heightInput.value = origH;
+        img = image;
+        canvas.width = img.width; canvas.height = img.height;
         document.getElementById('previewImg').src = ev.target.result;
         document.getElementById('editorArea').style.display = 'block';
+        document.getElementById('origSize').textContent = formatBytes(file.size);
+        updateCompression();
       };
       image.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   });
 
-  document.getElementById('lockRatio').addEventListener('click', function(){
-    ratioLocked = !ratioLocked;
-    this.classList.toggle('active');
-    this.textContent = ratioLocked ? '🔒 Lock aspect ratio' : '🔓 Aspect ratio unlocked';
+  document.getElementById('qualityRange').addEventListener('input', e => {
+    document.getElementById('qualityVal').textContent = e.target.value;
+    updateCompression();
   });
 
-  widthInput.addEventListener('input', () => {
-    if(ratioLocked && origW) heightInput.value = Math.round(widthInput.value * (origH/origW));
-  });
-  heightInput.addEventListener('input', () => {
-    if(ratioLocked && origH) widthInput.value = Math.round(heightInput.value * (origW/origH));
-  });
+  function formatBytes(b){
+    if(b < 1024) return b + ' B';
+    if(b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+    return (b/(1024*1024)).toFixed(2) + ' MB';
+  }
 
-  scaleRange.addEventListener('input', () => {
-    document.getElementById('scaleVal').textContent = scaleRange.value;
-    if(origW){
-      widthInput.value = Math.round(origW * (scaleRange.value/100));
-      heightInput.value = Math.round(origH * (scaleRange.value/100));
-    }
-  });
+  function updateCompression(){
+    if(!img) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0);
+    const quality = document.getElementById('qualityRange').value / 100;
+    canvas.toBlob(blob => {
+      document.getElementById('compSize').textContent = formatBytes(blob.size);
+    }, 'image/jpeg', quality);
+  }
 
   document.getElementById('downloadBtn').addEventListener('click', () => {
-    if(!img) return;
-    const w = parseInt(widthInput.value) || origW;
-    const h = parseInt(heightInput.value) || origH;
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
+    const quality = document.getElementById('qualityRange').value / 100;
     canvas.toBlob(blob => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = `resized-${w}x${h}.png`;
+      a.href = url; a.download = 'compressed-image.jpg';
       a.click();
       URL.revokeObjectURL(url);
-    }, 'image/png');
+    }, 'image/jpeg', quality);
   });
   
 </script>

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Resizer — Free & Instant | Krunto</title>
-<meta name="description" content="Resize any image to exact pixel dimensions or a percentage scale, then download — free and private, works in your browser.">
+<title>BMI Calculator — Free Body Mass Index Calculator | Krunto</title>
+<meta name="description" content="Calculate your Body Mass Index (BMI) using metric or imperial units and see your healthy weight category instantly.">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
 <style>
@@ -68,31 +68,36 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <header>
   <a class="home" href="index.html">&larr; All Krunto tools</a>
-  <h1>Image Resizer</h1>
-  <p class="sub">Resize images to exact dimensions or a percentage — with locked aspect ratio.</p>
+  <h1>BMI Calculator</h1>
+  <p class="sub">Work out your Body Mass Index and see which healthy-weight range you fall into.</p>
 </header>
 
 <main>
 
   <div class="panel">
-    <input type="file" id="fileInput" accept="image/*" style="margin-bottom:14px;">
-    <div id="editorArea" style="display:none;">
-      <img id="previewImg" style="max-width:100%; border-radius:8px; border:1px solid var(--line); margin-bottom:14px;">
-      <div class="row">
-        <div class="field"><label>Width (px)</label><input type="number" id="widthInput"></div>
-        <div class="field"><label>Height (px)</label><input type="number" id="heightInput"></div>
-      </div>
-      <div class="chip-row">
-        <span class="chip active" id="lockRatio">🔒 Lock aspect ratio</span>
-      </div>
-      <div class="field" style="margin-top:14px;">
-        <label>Or scale by percentage: <span class="range-val" id="scaleVal">100</span>%</label>
-        <div class="range-row"><input type="range" id="scaleRange" min="10" max="200" value="100"></div>
-      </div>
-      <div class="actions" style="margin-top:16px;">
-        <button class="primary" id="downloadBtn">Download resized image</button>
-      </div>
+    <div class="chip-row" id="unitChips">
+      <span class="chip active" data-unit="metric">Metric (kg / cm)</span>
+      <span class="chip" data-unit="imperial">Imperial (lb / in)</span>
     </div>
+
+    <div class="row" id="metricRow">
+      <div class="field"><label>Weight (kg)</label><input type="number" id="weightKg" placeholder="68"></div>
+      <div class="field"><label>Height (cm)</label><input type="number" id="heightCm" placeholder="172"></div>
+    </div>
+    <div class="row" id="imperialRow" style="display:none">
+      <div class="field"><label>Weight (lb)</label><input type="number" id="weightLb" placeholder="150"></div>
+      <div class="field"><label>Height (in)</label><input type="number" id="heightIn" placeholder="68"></div>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-main" id="resultMain">—</div>
+      <div class="result-sub" id="resultSub"></div>
+    </div>
+  </div>
+
+  <div class="info-block">
+    <h2>BMI categories</h2>
+    <p>Below 18.5 is considered underweight, 18.5–24.9 is a healthy range, 25–29.9 is overweight, and 30 and above falls in the obese range. BMI is a general screening measure and doesn't account for muscle mass, so it's best used alongside other health indicators.</p>
   </div>
   
 
@@ -108,66 +113,46 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <script>
 
-  let img = null, origW = 0, origH = 0, ratioLocked = true;
-  const fileInput = document.getElementById('fileInput');
-  const widthInput = document.getElementById('widthInput');
-  const heightInput = document.getElementById('heightInput');
-  const scaleRange = document.getElementById('scaleRange');
+  const unitChips = document.querySelectorAll('#unitChips .chip');
+  let unit = 'metric';
+  unitChips.forEach(c => c.addEventListener('click', () => {
+    unitChips.forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    unit = c.dataset.unit;
+    document.getElementById('metricRow').style.display = unit==='metric' ? 'flex':'none';
+    document.getElementById('imperialRow').style.display = unit==='imperial' ? 'flex':'none';
+    compute();
+  }));
 
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const image = new Image();
-      image.onload = () => {
-        img = image; origW = image.width; origH = image.height;
-        widthInput.value = origW; heightInput.value = origH;
-        document.getElementById('previewImg').src = ev.target.result;
-        document.getElementById('editorArea').style.display = 'block';
-      };
-      image.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
+  ['weightKg','heightCm','weightLb','heightIn'].forEach(id => {
+    document.getElementById(id).addEventListener('input', compute);
   });
 
-  document.getElementById('lockRatio').addEventListener('click', function(){
-    ratioLocked = !ratioLocked;
-    this.classList.toggle('active');
-    this.textContent = ratioLocked ? '🔒 Lock aspect ratio' : '🔓 Aspect ratio unlocked';
-  });
-
-  widthInput.addEventListener('input', () => {
-    if(ratioLocked && origW) heightInput.value = Math.round(widthInput.value * (origH/origW));
-  });
-  heightInput.addEventListener('input', () => {
-    if(ratioLocked && origH) widthInput.value = Math.round(heightInput.value * (origW/origH));
-  });
-
-  scaleRange.addEventListener('input', () => {
-    document.getElementById('scaleVal').textContent = scaleRange.value;
-    if(origW){
-      widthInput.value = Math.round(origW * (scaleRange.value/100));
-      heightInput.value = Math.round(origH * (scaleRange.value/100));
+  function compute(){
+    const box = document.getElementById('resultBox');
+    const main = document.getElementById('resultMain');
+    const sub = document.getElementById('resultSub');
+    let bmi;
+    if(unit === 'metric'){
+      const w = parseFloat(document.getElementById('weightKg').value);
+      const h = parseFloat(document.getElementById('heightCm').value)/100;
+      if(isNaN(w) || isNaN(h) || h<=0){ box.classList.remove('show'); return; }
+      bmi = w/(h*h);
+    } else {
+      const w = parseFloat(document.getElementById('weightLb').value);
+      const h = parseFloat(document.getElementById('heightIn').value);
+      if(isNaN(w) || isNaN(h) || h<=0){ box.classList.remove('show'); return; }
+      bmi = (w/(h*h))*703;
     }
-  });
-
-  document.getElementById('downloadBtn').addEventListener('click', () => {
-    if(!img) return;
-    const w = parseInt(widthInput.value) || origW;
-    const h = parseInt(heightInput.value) || origH;
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `resized-${w}x${h}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
-  });
+    let category;
+    if(bmi < 18.5) category = 'Underweight';
+    else if(bmi < 25) category = 'Healthy weight';
+    else if(bmi < 30) category = 'Overweight';
+    else category = 'Obese';
+    main.textContent = bmi.toFixed(1);
+    sub.textContent = `Category: ${category}`;
+    box.classList.add('show');
+  }
   
 </script>
 

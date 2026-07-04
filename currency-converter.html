@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Resizer — Free & Instant | Krunto</title>
-<meta name="description" content="Resize any image to exact pixel dimensions or a percentage scale, then download — free and private, works in your browser.">
+<title>Currency Converter — Live Exchange Rates | Krunto</title>
+<meta name="description" content="Convert between world currencies using live, daily-updated exchange rates. Free and instant, no sign-up required.">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
 <style>
@@ -68,31 +68,32 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <header>
   <a class="home" href="index.html">&larr; All Krunto tools</a>
-  <h1>Image Resizer</h1>
-  <p class="sub">Resize images to exact dimensions or a percentage — with locked aspect ratio.</p>
+  <h1>Currency Converter</h1>
+  <p class="sub">Convert between currencies using live exchange rates, updated daily.</p>
 </header>
 
 <main>
 
   <div class="panel">
-    <input type="file" id="fileInput" accept="image/*" style="margin-bottom:14px;">
-    <div id="editorArea" style="display:none;">
-      <img id="previewImg" style="max-width:100%; border-radius:8px; border:1px solid var(--line); margin-bottom:14px;">
-      <div class="row">
-        <div class="field"><label>Width (px)</label><input type="number" id="widthInput"></div>
-        <div class="field"><label>Height (px)</label><input type="number" id="heightInput"></div>
-      </div>
-      <div class="chip-row">
-        <span class="chip active" id="lockRatio">🔒 Lock aspect ratio</span>
-      </div>
-      <div class="field" style="margin-top:14px;">
-        <label>Or scale by percentage: <span class="range-val" id="scaleVal">100</span>%</label>
-        <div class="range-row"><input type="range" id="scaleRange" min="10" max="200" value="100"></div>
-      </div>
-      <div class="actions" style="margin-top:16px;">
-        <button class="primary" id="downloadBtn">Download resized image</button>
-      </div>
+    <div class="row">
+      <div class="field"><label>Amount</label><input type="number" id="amount" value="100"></div>
+      <div class="field"><label>From</label><select id="fromCur"></select></div>
+      <div class="field"><label>To</label><select id="toCur"></select></div>
     </div>
+    <div class="actions">
+      <button class="primary" id="convertBtn">Convert</button>
+      <button class="secondary" id="swapBtn">Swap ⇄</button>
+    </div>
+    <div class="result-box" id="resultBox">
+      <div class="result-main" id="resultMain">—</div>
+      <div class="result-sub" id="resultSub"></div>
+    </div>
+    <div class="error-text" id="errorText"></div>
+  </div>
+
+  <div class="info-block">
+    <h2>About these rates</h2>
+    <p>Exchange rates are pulled live from the European Central Bank's daily reference rates via the Frankfurter API, updated once per business day. Rates are indicative and may differ slightly from what banks or money changers offer, since they typically add a margin or fee.</p>
   </div>
   
 
@@ -108,66 +109,46 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <script>
 
-  let img = null, origW = 0, origH = 0, ratioLocked = true;
-  const fileInput = document.getElementById('fileInput');
-  const widthInput = document.getElementById('widthInput');
-  const heightInput = document.getElementById('heightInput');
-  const scaleRange = document.getElementById('scaleRange');
+  const fromCur = document.getElementById('fromCur');
+  const toCur = document.getElementById('toCur');
+  const errorText = document.getElementById('errorText');
 
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const image = new Image();
-      image.onload = () => {
-        img = image; origW = image.width; origH = image.height;
-        widthInput.value = origW; heightInput.value = origH;
-        document.getElementById('previewImg').src = ev.target.result;
-        document.getElementById('editorArea').style.display = 'block';
-      };
-      image.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
+  fetch('https://api.frankfurter.app/currencies')
+    .then(r => r.json())
+    .then(data => {
+      const codes = Object.keys(data);
+      codes.forEach(code => {
+        const opt1 = document.createElement('option');
+        opt1.value = code; opt1.textContent = `${code} — ${data[code]}`;
+        fromCur.appendChild(opt1);
+        const opt2 = opt1.cloneNode(true);
+        toCur.appendChild(opt2);
+      });
+      fromCur.value = 'USD';
+      toCur.value = 'EUR';
+    })
+    .catch(() => { errorText.textContent = 'Could not load currency list. Check your connection and reload.'; });
 
-  document.getElementById('lockRatio').addEventListener('click', function(){
-    ratioLocked = !ratioLocked;
-    this.classList.toggle('active');
-    this.textContent = ratioLocked ? '🔒 Lock aspect ratio' : '🔓 Aspect ratio unlocked';
+  document.getElementById('swapBtn').addEventListener('click', () => {
+    const tmp = fromCur.value; fromCur.value = toCur.value; toCur.value = tmp;
+    convert();
   });
+  document.getElementById('convertBtn').addEventListener('click', convert);
 
-  widthInput.addEventListener('input', () => {
-    if(ratioLocked && origW) heightInput.value = Math.round(widthInput.value * (origH/origW));
-  });
-  heightInput.addEventListener('input', () => {
-    if(ratioLocked && origH) widthInput.value = Math.round(heightInput.value * (origW/origH));
-  });
-
-  scaleRange.addEventListener('input', () => {
-    document.getElementById('scaleVal').textContent = scaleRange.value;
-    if(origW){
-      widthInput.value = Math.round(origW * (scaleRange.value/100));
-      heightInput.value = Math.round(origH * (scaleRange.value/100));
-    }
-  });
-
-  document.getElementById('downloadBtn').addEventListener('click', () => {
-    if(!img) return;
-    const w = parseInt(widthInput.value) || origW;
-    const h = parseInt(heightInput.value) || origH;
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `resized-${w}x${h}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
-  });
+  function convert(){
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const from = fromCur.value, to = toCur.value;
+    errorText.textContent = '';
+    fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`)
+      .then(r => r.json())
+      .then(data => {
+        const rate = data.rates[to];
+        document.getElementById('resultMain').textContent = `${rate.toLocaleString(undefined,{maximumFractionDigits:2})} ${to}`;
+        document.getElementById('resultSub').textContent = `${amount} ${from} = ${rate.toLocaleString(undefined,{maximumFractionDigits:4})} ${to} (rate as of ${data.date})`;
+        document.getElementById('resultBox').classList.add('show');
+      })
+      .catch(() => { errorText.textContent = 'Conversion failed. Try again in a moment.'; });
+  }
   
 </script>
 

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Resizer — Free & Instant | Krunto</title>
-<meta name="description" content="Resize any image to exact pixel dimensions or a percentage scale, then download — free and private, works in your browser.">
+<title>Discount Calculator — Sale Price & Savings Calculator | Krunto</title>
+<meta name="description" content="Calculate the sale price after a discount, or work backward to find the original price and discount percentage.">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
 <style>
@@ -68,30 +68,34 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <header>
   <a class="home" href="index.html">&larr; All Krunto tools</a>
-  <h1>Image Resizer</h1>
-  <p class="sub">Resize images to exact dimensions or a percentage — with locked aspect ratio.</p>
+  <h1>Discount Calculator</h1>
+  <p class="sub">Find the final sale price and savings — or work backward from a sale price.</p>
 </header>
 
 <main>
 
   <div class="panel">
-    <input type="file" id="fileInput" accept="image/*" style="margin-bottom:14px;">
-    <div id="editorArea" style="display:none;">
-      <img id="previewImg" style="max-width:100%; border-radius:8px; border:1px solid var(--line); margin-bottom:14px;">
+    <div class="chip-row" id="modeChips">
+      <span class="chip active" data-mode="forward">Price + Discount % → Final price</span>
+      <span class="chip" data-mode="reverse">Original + Final price → Discount %</span>
+    </div>
+
+    <div id="forwardMode">
       <div class="row">
-        <div class="field"><label>Width (px)</label><input type="number" id="widthInput"></div>
-        <div class="field"><label>Height (px)</label><input type="number" id="heightInput"></div>
+        <div class="field"><label>Original price</label><input type="number" id="origPrice" placeholder="100"></div>
+        <div class="field"><label>Discount (%)</label><input type="number" id="discountPct" placeholder="20"></div>
       </div>
-      <div class="chip-row">
-        <span class="chip active" id="lockRatio">🔒 Lock aspect ratio</span>
+    </div>
+    <div id="reverseMode" style="display:none">
+      <div class="row">
+        <div class="field"><label>Original price</label><input type="number" id="revOrig" placeholder="100"></div>
+        <div class="field"><label>Sale (final) price</label><input type="number" id="revFinal" placeholder="80"></div>
       </div>
-      <div class="field" style="margin-top:14px;">
-        <label>Or scale by percentage: <span class="range-val" id="scaleVal">100</span>%</label>
-        <div class="range-row"><input type="range" id="scaleRange" min="10" max="200" value="100"></div>
-      </div>
-      <div class="actions" style="margin-top:16px;">
-        <button class="primary" id="downloadBtn">Download resized image</button>
-      </div>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-main" id="resultMain">—</div>
+      <div class="result-sub" id="resultSub"></div>
     </div>
   </div>
   
@@ -108,66 +112,42 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <script>
 
-  let img = null, origW = 0, origH = 0, ratioLocked = true;
-  const fileInput = document.getElementById('fileInput');
-  const widthInput = document.getElementById('widthInput');
-  const heightInput = document.getElementById('heightInput');
-  const scaleRange = document.getElementById('scaleRange');
+  const chips = document.querySelectorAll('#modeChips .chip');
+  let mode = 'forward';
+  chips.forEach(c => c.addEventListener('click', () => {
+    chips.forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    mode = c.dataset.mode;
+    document.getElementById('forwardMode').style.display = mode==='forward' ? 'block':'none';
+    document.getElementById('reverseMode').style.display = mode==='reverse' ? 'block':'none';
+    compute();
+  }));
 
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const image = new Image();
-      image.onload = () => {
-        img = image; origW = image.width; origH = image.height;
-        widthInput.value = origW; heightInput.value = origH;
-        document.getElementById('previewImg').src = ev.target.result;
-        document.getElementById('editorArea').style.display = 'block';
-      };
-      image.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
+  ['origPrice','discountPct','revOrig','revFinal'].forEach(id => {
+    document.getElementById(id).addEventListener('input', compute);
   });
 
-  document.getElementById('lockRatio').addEventListener('click', function(){
-    ratioLocked = !ratioLocked;
-    this.classList.toggle('active');
-    this.textContent = ratioLocked ? '🔒 Lock aspect ratio' : '🔓 Aspect ratio unlocked';
-  });
-
-  widthInput.addEventListener('input', () => {
-    if(ratioLocked && origW) heightInput.value = Math.round(widthInput.value * (origH/origW));
-  });
-  heightInput.addEventListener('input', () => {
-    if(ratioLocked && origH) widthInput.value = Math.round(heightInput.value * (origW/origH));
-  });
-
-  scaleRange.addEventListener('input', () => {
-    document.getElementById('scaleVal').textContent = scaleRange.value;
-    if(origW){
-      widthInput.value = Math.round(origW * (scaleRange.value/100));
-      heightInput.value = Math.round(origH * (scaleRange.value/100));
+  function compute(){
+    const box = document.getElementById('resultBox');
+    if(mode === 'forward'){
+      const price = parseFloat(document.getElementById('origPrice').value);
+      const pct = parseFloat(document.getElementById('discountPct').value);
+      if(isNaN(price) || isNaN(pct)){ box.classList.remove('show'); return; }
+      const savings = price * (pct/100);
+      const final = price - savings;
+      document.getElementById('resultMain').textContent = final.toLocaleString(undefined,{maximumFractionDigits:2});
+      document.getElementById('resultSub').textContent = `You save ${savings.toLocaleString(undefined,{maximumFractionDigits:2})} (${pct}% off ${price})`;
+    } else {
+      const orig = parseFloat(document.getElementById('revOrig').value);
+      const final = parseFloat(document.getElementById('revFinal').value);
+      if(isNaN(orig) || isNaN(final) || orig===0){ box.classList.remove('show'); return; }
+      const pct = ((orig-final)/orig)*100;
+      document.getElementById('resultMain').textContent = pct.toFixed(2) + '% off';
+      document.getElementById('resultSub').textContent = `Saved ${(orig-final).toLocaleString(undefined,{maximumFractionDigits:2})} off the original ${orig}`;
     }
-  });
-
-  document.getElementById('downloadBtn').addEventListener('click', () => {
-    if(!img) return;
-    const w = parseInt(widthInput.value) || origW;
-    const h = parseInt(heightInput.value) || origH;
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `resized-${w}x${h}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
-  });
+    box.classList.add('show');
+  }
+  compute();
   
 </script>
 

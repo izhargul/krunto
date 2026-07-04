@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Resizer — Free & Instant | Krunto</title>
-<meta name="description" content="Resize any image to exact pixel dimensions or a percentage scale, then download — free and private, works in your browser.">
+<title>Grade Calculator — Weighted Final Grade Calculator | Krunto</title>
+<meta name="description" content="Calculate your final weighted grade from assignment scores and their weights — free and instant.">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
 <style>
@@ -68,31 +68,28 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <header>
   <a class="home" href="index.html">&larr; All Krunto tools</a>
-  <h1>Image Resizer</h1>
-  <p class="sub">Resize images to exact dimensions or a percentage — with locked aspect ratio.</p>
+  <h1>Grade Calculator</h1>
+  <p class="sub">Add your assignments, scores, and weights to calculate your final weighted grade.</p>
 </header>
 
 <main>
 
   <div class="panel">
-    <input type="file" id="fileInput" accept="image/*" style="margin-bottom:14px;">
-    <div id="editorArea" style="display:none;">
-      <img id="previewImg" style="max-width:100%; border-radius:8px; border:1px solid var(--line); margin-bottom:14px;">
-      <div class="row">
-        <div class="field"><label>Width (px)</label><input type="number" id="widthInput"></div>
-        <div class="field"><label>Height (px)</label><input type="number" id="heightInput"></div>
-      </div>
-      <div class="chip-row">
-        <span class="chip active" id="lockRatio">🔒 Lock aspect ratio</span>
-      </div>
-      <div class="field" style="margin-top:14px;">
-        <label>Or scale by percentage: <span class="range-val" id="scaleVal">100</span>%</label>
-        <div class="range-row"><input type="range" id="scaleRange" min="10" max="200" value="100"></div>
-      </div>
-      <div class="actions" style="margin-top:16px;">
-        <button class="primary" id="downloadBtn">Download resized image</button>
-      </div>
+    <table class="entry-table" id="gradeTable">
+      <thead><tr><th style="width:40%">Assignment</th><th>Score</th><th>Out of</th><th>Weight %</th><th></th></tr></thead>
+      <tbody id="gradeBody"></tbody>
+    </table>
+    <button class="secondary" id="addRowBtn" style="margin-top:8px;">+ Add assignment</button>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-main" id="resultMain">—</div>
+      <div class="result-sub" id="resultSub"></div>
     </div>
+  </div>
+
+  <div class="info-block">
+    <h2>How it's calculated</h2>
+    <p>Each assignment's percentage (score ÷ out of) is multiplied by its weight, and the results are summed and divided by the total weight entered — giving your overall weighted grade even if the weights don't add up to exactly 100.</p>
   </div>
   
 
@@ -108,66 +105,72 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <script>
 
-  let img = null, origW = 0, origH = 0, ratioLocked = true;
-  const fileInput = document.getElementById('fileInput');
-  const widthInput = document.getElementById('widthInput');
-  const heightInput = document.getElementById('heightInput');
-  const scaleRange = document.getElementById('scaleRange');
+  let rows = [];
+  let rId = 0;
 
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const image = new Image();
-      image.onload = () => {
-        img = image; origW = image.width; origH = image.height;
-        widthInput.value = origW; heightInput.value = origH;
-        document.getElementById('previewImg').src = ev.target.result;
-        document.getElementById('editorArea').style.display = 'block';
-      };
-      image.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
+  function addRow(){
+    rows.push({ id: rId++, name:'', score:0, outOf:100, weight:10 });
+    render();
+  }
 
-  document.getElementById('lockRatio').addEventListener('click', function(){
-    ratioLocked = !ratioLocked;
-    this.classList.toggle('active');
-    this.textContent = ratioLocked ? '🔒 Lock aspect ratio' : '🔓 Aspect ratio unlocked';
-  });
+  function render(){
+    const body = document.getElementById('gradeBody');
+    body.innerHTML = '';
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input data-f="name" data-id="${r.id}" value="${r.name}" placeholder="e.g. Midterm"></td>
+        <td><input type="number" data-f="score" data-id="${r.id}" value="${r.score}" style="width:70px"></td>
+        <td><input type="number" data-f="outOf" data-id="${r.id}" value="${r.outOf}" style="width:70px"></td>
+        <td><input type="number" data-f="weight" data-id="${r.id}" value="${r.weight}" style="width:70px"></td>
+        <td><button class="small-btn" data-remove="${r.id}">✕</button></td>
+      `;
+      body.appendChild(tr);
+    });
+    compute();
+  }
 
-  widthInput.addEventListener('input', () => {
-    if(ratioLocked && origW) heightInput.value = Math.round(widthInput.value * (origH/origW));
+  document.getElementById('gradeBody').addEventListener('input', e => {
+    const id = Number(e.target.dataset.id);
+    const f = e.target.dataset.f;
+    const r = rows.find(x => x.id === id);
+    if(r) r[f] = f === 'name' ? e.target.value : parseFloat(e.target.value) || 0;
+    compute();
   });
-  heightInput.addEventListener('input', () => {
-    if(ratioLocked && origH) widthInput.value = Math.round(heightInput.value * (origW/origH));
-  });
-
-  scaleRange.addEventListener('input', () => {
-    document.getElementById('scaleVal').textContent = scaleRange.value;
-    if(origW){
-      widthInput.value = Math.round(origW * (scaleRange.value/100));
-      heightInput.value = Math.round(origH * (scaleRange.value/100));
+  document.getElementById('gradeBody').addEventListener('click', e => {
+    if(e.target.dataset.remove){
+      rows = rows.filter(x => x.id !== Number(e.target.dataset.remove));
+      render();
     }
   });
 
-  document.getElementById('downloadBtn').addEventListener('click', () => {
-    if(!img) return;
-    const w = parseInt(widthInput.value) || origW;
-    const h = parseInt(heightInput.value) || origH;
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `resized-${w}x${h}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
-  });
+  function letterGrade(pct){
+    if(pct >= 93) return 'A'; if(pct >= 90) return 'A-';
+    if(pct >= 87) return 'B+'; if(pct >= 83) return 'B'; if(pct >= 80) return 'B-';
+    if(pct >= 77) return 'C+'; if(pct >= 73) return 'C'; if(pct >= 70) return 'C-';
+    if(pct >= 67) return 'D+'; if(pct >= 60) return 'D';
+    return 'F';
+  }
+
+  function compute(){
+    const box = document.getElementById('resultBox');
+    let totalWeight = 0, weightedSum = 0;
+    rows.forEach(r => {
+      if(r.outOf > 0){
+        const pct = (r.score/r.outOf)*100;
+        weightedSum += pct * r.weight;
+        totalWeight += r.weight;
+      }
+    });
+    if(totalWeight === 0){ box.classList.remove('show'); return; }
+    const finalPct = weightedSum / totalWeight;
+    document.getElementById('resultMain').textContent = finalPct.toFixed(2) + '% (' + letterGrade(finalPct) + ')';
+    document.getElementById('resultSub').textContent = `Based on ${totalWeight}% of weight entered across ${rows.length} assignment(s)`;
+    box.classList.add('show');
+  }
+
+  document.getElementById('addRowBtn').addEventListener('click', addRow);
+  addRow(); addRow();
   
 </script>
 

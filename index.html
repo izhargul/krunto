@@ -5,7 +5,7 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7143130602873663" crossorigin="anonymous"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Krunto — Free Online Tools That Make Your Work Easier</title>
-<meta name="description" content="Krunto is a free toolkit of simple online tools: EMI calculator, QR code generator, image resizer, word counter, and how-to guides. No sign-up, no clutter.">
+<meta name="description" content="Krunto is a free toolkit of simple online tools: calculators, converters, generators, image tools, and text utilities. No sign-up, no clutter.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="google-site-verification" content="tLWyrnfZXCnbqaiKPlNnMdg4sGy-3iYavwUIMbDsQP0" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,32 +17,57 @@
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;}
   a{color:inherit;text-decoration:none;}
-  header{display:flex;align-items:center;justify-content:space-between;padding:28px 6vw;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:28px 6vw;position:sticky;top:0;background:var(--bg);z-index:10;border-bottom:1px solid rgba(31,35,33,0.06);}
   .logo{font-family:'Fraunces',serif;font-weight:600;font-size:1.4rem;display:flex;align-items:center;gap:8px;}
   .logo span{color:var(--teal);font-style:italic;}
-  nav a{margin-left:24px;font-weight:500;font-size:0.95rem;color:#555;}
+  nav{display:flex;flex-wrap:wrap;gap:0;}
+  nav a{margin-left:20px;font-weight:500;font-size:0.9rem;color:#555;white-space:nowrap;}
   nav a:hover{color:var(--teal);}
-  .hero{text-align:center;padding:80px 6vw 60px;max-width:760px;margin:0 auto;opacity:0;animation:fadeUp .8s ease forwards;}
+
+  .hero{text-align:center;padding:70px 6vw 20px;max-width:760px;margin:0 auto;opacity:0;animation:fadeUp .8s ease forwards;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
   .hero h1{font-family:'Fraunces',serif;font-weight:600;font-size:2.6rem;line-height:1.25;margin-bottom:18px;}
   .hero h1 em{color:var(--teal);font-style:italic;}
   .hero p{font-size:1.1rem;color:#555;max-width:520px;margin:0 auto;}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;max-width:1100px;margin:40px auto 100px;padding:0 6vw;}
-  .card{background:var(--card);border-radius:20px;padding:32px 28px;transition:transform .25s ease, box-shadow .25s ease;}
+
+  .search-wrap{max-width:520px;margin:32px auto 0;padding:0 6vw;}
+  #toolSearch{width:100%;padding:14px 18px;border-radius:14px;border:1px solid #ddd8ca;background:#fff;font-size:1rem;font-family:inherit;}
+  #toolSearch:focus{outline:2px solid var(--teal);outline-offset:1px;}
+
+  section.category{max-width:1100px;margin:0 auto;padding:0 6vw;}
+  .category-heading{display:flex;align-items:baseline;gap:12px;margin:56px 0 22px;}
+  .category-heading h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.5rem;margin:0;}
+  .category-heading .count{font-size:0.85rem;color:#888;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;}
+  .card{background:var(--card);border-radius:20px;padding:28px 26px;transition:transform .25s ease, box-shadow .25s ease;}
   .card:hover{transform:translateY(-6px);box-shadow:0 16px 30px rgba(31,35,33,0.08);}
-  .icon{width:44px;height:44px;margin-bottom:18px;color:var(--teal);}
-  .card h3{font-family:'Fraunces',serif;font-size:1.25rem;margin:0 0 8px;}
-  .card p{font-size:0.95rem;color:#666;margin:0 0 16px;}
-  .card .go{color:var(--teal);font-weight:600;font-size:0.9rem;}
-  footer{text-align:center;padding:40px 6vw;color:#888;font-size:0.85rem;}
+  .icon{width:40px;height:40px;margin-bottom:16px;color:var(--teal);}
+  .card h3{font-family:'Fraunces',serif;font-size:1.15rem;margin:0 0 8px;}
+  .card p{font-size:0.9rem;color:#666;margin:0 0 14px;}
+  .card .go{color:var(--teal);font-weight:600;font-size:0.88rem;}
+  .card.hidden{display:none;}
+
+  .empty-state{text-align:center;color:#888;padding:40px 0;display:none;}
+
+  footer{text-align:center;padding:60px 6vw 40px;color:#888;font-size:0.85rem;margin-top:40px;}
   footer a{color:var(--teal);}
+
+  @media (max-width:640px){
+    nav{display:none;}
+  }
 </style>
 </head>
 <body>
 <header>
   <div class="logo">Krunto</div>
   <nav>
-    <a href="#tools">Tools</a>
+    <a href="#calculators">Calculators</a>
+    <a href="#converters">Converters</a>
+    <a href="#text-tools">Text &amp; Code</a>
+    <a href="#image-tools">Images</a>
+    <a href="#generators">Generators</a>
+    <a href="#business">Business</a>
     <a href="privacy.html">Privacy</a>
   </nav>
 </header>
@@ -52,53 +77,261 @@
   <p>A little toolkit that takes care of the fiddly stuff — calculations, files, and text — so you can get back to your day.</p>
 </section>
 
-<section class="grid" id="tools">
-  <a class="card" href="loan-calculator.html">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 8h10M7 12h4M7 16h4M15 12h2M15 16h2"/></svg>
-    <h3>Loan Calculator</h3>
-    <p>Work out your monthly loan payment, interest, and total cost in seconds.</p>
-    <span class="go">Open tool →</span>
-  </a>
-  <a class="card" href="qr-generator.html">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3"/></svg>
-    <h3>QR Code Generator</h3>
-    <p>Turn any link or text into a downloadable QR code instantly.</p>
-    <span class="go">Open tool →</span>
-  </a>
-  <a class="card" href="image-resizer.html">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="14" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg>
-    <h3>Image Resizer</h3>
-    <p>Resize and convert images between JPG, PNG, and WebP — all in your browser.</p>
-    <span class="go">Open tool →</span>
-  </a>
-  <a class="card" href="word-counter.html">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z" opacity="0"/><path d="M6 4h9l5 5v11H6z"/><path d="M14 4v5h5M8 13h8M8 17h5"/></svg>
-    <h3>Word Counter</h3>
-    <p>Count words, estimate reading time, and check readability at a glance.</p>
-    <span class="go">Open tool →</span>
-  </a>
-  <a class="card" href="how-to-page.html">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
-    <h3>How-To Guides</h3>
-    <p>Clear, step-by-step guides for common everyday questions.</p>
-    <span class="go">Open tool →</span>
-  </a>
-  <a class="card" href="cv-builder.html">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-    <h3>CV / Resume Builder</h3>
-    <p>Fill in your details and download a clean, professional resume as a PDF.</p>
-    <span class="go">Open tool →</span>
-  </a>
-  <a class="card" href="text-to-speech.html">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M17 8a5 5 0 010 8M19.5 5.5a9 9 0 010 13"/></svg>
-    <h3>Text to Speech</h3>
-    <p>Type or paste text and have it read aloud instantly, for free.</p>
-    <span class="go">Open tool →</span>
-  </a>
+<div class="search-wrap">
+  <input type="text" id="toolSearch" placeholder="Search tools… e.g. BMI, invoice, password">
+</div>
+
+<!-- CALCULATORS -->
+<section class="category" id="calculators">
+  <div class="category-heading"><h2>Calculators</h2><span class="count">7 tools</span></div>
+  <div class="grid">
+
+    <a class="card" data-name="loan calculator emi" href="loan-calculator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 8h10M7 12h4M7 16h4M15 12h2M15 16h2"/></svg>
+      <h3>Loan Calculator</h3>
+      <p>Work out your monthly loan payment, interest, and total cost in seconds.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="age calculator birthday" href="age-calculator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg>
+      <h3>Age Calculator</h3>
+      <p>Find your exact age in years, months, and days, plus a countdown to your next birthday.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="bmi calculator weight height" href="bmi-calculator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M6 8c0-2.5 2-4 6-4s6 1.5 6 4-2 3-6 3-6 .5-6 3 2 4 6 4 6-1.5 6-4"/></svg>
+      <h3>BMI Calculator</h3>
+      <p>Calculate your Body Mass Index and see your healthy weight category instantly.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="gpa calculator grade point average" href="gpa-calculator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19V5a2 2 0 012-2h8l6 6v10a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+      <h3>GPA Calculator</h3>
+      <p>Add your courses, grades, and credit hours to calculate your GPA on a 4.0 scale.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="grade calculator weighted final" href="grade-calculator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-5.5"/></svg>
+      <h3>Grade Calculator</h3>
+      <p>Calculate your final weighted grade from assignment scores and their weights.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="percentage calculator percent of" href="percentage-calculator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="3"/><circle cx="17" cy="17" r="3"/><path d="M18 6L6 18"/></svg>
+      <h3>Percentage Calculator</h3>
+      <p>Find X percent of Y, what percent X is of Y, or the percentage change between numbers.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="discount calculator sale price" href="discount-calculator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12l-8 8-9-9V4h7l10 8z"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+      <h3>Discount Calculator</h3>
+      <p>Calculate the sale price after a discount, or work backward from a sale price.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+  </div>
 </section>
+
+<!-- CONVERTERS -->
+<section class="category" id="converters">
+  <div class="category-heading"><h2>Converters</h2><span class="count">3 tools</span></div>
+  <div class="grid">
+
+    <a class="card" data-name="unit converter length weight temperature metric imperial" href="unit-converter.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h13M17 7l-3-3M17 7l-3 3"/><path d="M20 17H7M7 17l3-3M7 17l3 3"/></svg>
+      <h3>Unit Converter</h3>
+      <p>Convert length, weight, and temperature between metric and imperial units.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="currency converter exchange rate" href="currency-converter.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="12" r="5"/><circle cx="16" cy="12" r="5"/></svg>
+      <h3>Currency Converter</h3>
+      <p>Convert between currencies using live exchange rates, updated daily.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="date calculator days between countdown" href="date-calculator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+      <h3>Date Calculator</h3>
+      <p>Find the difference between two dates, or count down to a future date.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+  </div>
+</section>
+
+<!-- TEXT & CODE TOOLS -->
+<section class="category" id="text-tools">
+  <div class="category-heading"><h2>Text &amp; Code Tools</h2><span class="count">5 tools</span></div>
+  <div class="grid">
+
+    <a class="card" data-name="word counter reading time readability" href="word-counter.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4h9l5 5v11H6z"/><path d="M14 4v5h5M8 13h8M8 17h5"/></svg>
+      <h3>Word Counter</h3>
+      <p>Count words, estimate reading time, and check readability at a glance.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="character counter sentence paragraph" href="character-counter.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H9l-5 5z"/><path d="M8 9h8M8 13h5"/></svg>
+      <h3>Character Counter</h3>
+      <p>Live character, word, sentence, and paragraph counts as you type.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="case converter uppercase lowercase camelcase snake kebab" href="case-converter.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17l4-10 4 10M5.5 13h5"/><path d="M14 10c0-1 1-2 2.5-2s2.5 1 2.5 2-1 1.5-2.5 2-2.5 1-2.5 2 1 2 2.5 2 2.5-1 2.5-2"/></svg>
+      <h3>Case Converter</h3>
+      <p>Convert text into UPPERCASE, lowercase, Title Case, camelCase, snake_case, and more.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="base64 encoder decoder" href="base64-encoder.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 11v2M11 11v2M15 11v2M19 11v2"/></svg>
+      <h3>Base64 Encoder / Decoder</h3>
+      <p>Encode plain text to Base64, or decode Base64 back to readable text.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="json formatter validator beautify minify" href="json-formatter.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3c-2 0-3 1-3 3v3c0 1-.5 2-2 2 1.5 0 2 1 2 2v3c0 2 1 3 3 3M16 3c2 0 3 1 3 3v3c0 1 .5 2 2 2-1.5 0-2 1-2 2v3c0 2-1 3-3 3"/></svg>
+      <h3>JSON Formatter</h3>
+      <p>Beautify, minify, and validate JSON — with clear error messages if something's wrong.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+  </div>
+</section>
+
+<!-- IMAGE TOOLS -->
+<section class="category" id="image-tools">
+  <div class="category-heading"><h2>Image Tools</h2><span class="count">3 tools</span></div>
+  <div class="grid">
+
+    <a class="card" data-name="image resizer dimensions pixels" href="image-resizer.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="14" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg>
+      <h3>Image Resizer</h3>
+      <p>Resize images to exact dimensions or a percentage — with locked aspect ratio.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="image compressor file size quality" href="image-compressor.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="14" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="M3 15l5-5 4 4 3-3 6 6"/><path d="M12 21v-3M9 21h6"/></svg>
+      <h3>Image Compressor</h3>
+      <p>Shrink image file size with an adjustable quality slider before you download.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="qr code generator" href="qr-generator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3"/></svg>
+      <h3>QR Code Generator</h3>
+      <p>Turn any link or text into a downloadable QR code instantly.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+  </div>
+</section>
+
+<!-- GENERATORS -->
+<section class="category" id="generators">
+  <div class="category-heading"><h2>Generators</h2><span class="count">2 tools</span></div>
+  <div class="grid">
+
+    <a class="card" data-name="password generator strong secure random" href="password-generator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+      <h3>Password Generator</h3>
+      <p>Create strong, random passwords — customize length and character types.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="uuid generator guid random bulk" href="uuid-generator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+      <h3>UUID Generator</h3>
+      <p>Generate random version-4 UUIDs, one at a time or in bulk.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+  </div>
+</section>
+
+<!-- BUSINESS -->
+<section class="category" id="business">
+  <div class="category-heading"><h2>Business &amp; Documents</h2><span class="count">3 tools</span></div>
+  <div class="grid">
+
+    <a class="card" data-name="invoice generator pdf business" href="invoice-generator.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h9l5 5v13H6z"/><path d="M15 3v5h5M9 12h6M9 15h6M9 18h4"/></svg>
+      <h3>Invoice Generator</h3>
+      <p>Create a professional invoice with line items and tax, then download it as a PDF.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="cv builder resume pdf" href="cv-builder.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      <h3>CV / Resume Builder</h3>
+      <p>Fill in your details and download a clean, professional resume as a PDF.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="card" data-name="text to speech read aloud" href="text-to-speech.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M17 8a5 5 0 010 8M19.5 5.5a9 9 0 010 13"/></svg>
+      <h3>Text to Speech</h3>
+      <p>Type or paste text and have it read aloud instantly, for free.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+  </div>
+</section>
+
+<section class="category">
+  <div class="category-heading"><h2>Guides</h2><span class="count">1 resource</span></div>
+  <div class="grid">
+    <a class="card" data-name="how to guides step by step" href="how-to-page.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+      <h3>How-To Guides</h3>
+      <p>Clear, step-by-step guides for common everyday questions.</p>
+      <span class="go">Open tool →</span>
+    </a>
+  </div>
+</section>
+
+<p class="empty-state" id="emptyState">No tools match your search.</p>
 
 <footer>
   Made with care by Krunto · <a href="privacy.html">Privacy Policy</a>
 </footer>
+
+<script>
+  const searchInput = document.getElementById('toolSearch');
+  const cards = Array.from(document.querySelectorAll('.card'));
+  const categories = Array.from(document.querySelectorAll('section.category'));
+  const emptyState = document.getElementById('emptyState');
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    let anyVisible = false;
+
+    categories.forEach(cat => {
+      let catHasVisible = false;
+      cat.querySelectorAll('.card').forEach(card => {
+        const haystack = (card.dataset.name + ' ' + card.querySelector('h3').textContent).toLowerCase();
+        const match = q === '' || haystack.includes(q);
+        card.classList.toggle('hidden', !match);
+        if(match){ catHasVisible = true; anyVisible = true; }
+      });
+      cat.style.display = catHasVisible ? '' : 'none';
+    });
+
+    emptyState.style.display = anyVisible ? 'none' : 'block';
+  });
+</script>
+
 </body>
 </html>

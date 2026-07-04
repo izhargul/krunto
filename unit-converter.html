@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Resizer — Free & Instant | Krunto</title>
-<meta name="description" content="Resize any image to exact pixel dimensions or a percentage scale, then download — free and private, works in your browser.">
+<title>Unit Converter — Length, Weight & Temperature | Krunto</title>
+<meta name="description" content="Convert length, weight, and temperature units instantly — metric and imperial, free and accurate.">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
 <style>
@@ -68,30 +68,27 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <header>
   <a class="home" href="index.html">&larr; All Krunto tools</a>
-  <h1>Image Resizer</h1>
-  <p class="sub">Resize images to exact dimensions or a percentage — with locked aspect ratio.</p>
+  <h1>Unit Converter</h1>
+  <p class="sub">Convert length, weight, and temperature between metric and imperial units.</p>
 </header>
 
 <main>
 
   <div class="panel">
-    <input type="file" id="fileInput" accept="image/*" style="margin-bottom:14px;">
-    <div id="editorArea" style="display:none;">
-      <img id="previewImg" style="max-width:100%; border-radius:8px; border:1px solid var(--line); margin-bottom:14px;">
-      <div class="row">
-        <div class="field"><label>Width (px)</label><input type="number" id="widthInput"></div>
-        <div class="field"><label>Height (px)</label><input type="number" id="heightInput"></div>
-      </div>
-      <div class="chip-row">
-        <span class="chip active" id="lockRatio">🔒 Lock aspect ratio</span>
-      </div>
-      <div class="field" style="margin-top:14px;">
-        <label>Or scale by percentage: <span class="range-val" id="scaleVal">100</span>%</label>
-        <div class="range-row"><input type="range" id="scaleRange" min="10" max="200" value="100"></div>
-      </div>
-      <div class="actions" style="margin-top:16px;">
-        <button class="primary" id="downloadBtn">Download resized image</button>
-      </div>
+    <div class="chip-row" id="catChips">
+      <span class="chip active" data-cat="length">Length</span>
+      <span class="chip" data-cat="weight">Weight</span>
+      <span class="chip" data-cat="temp">Temperature</span>
+    </div>
+
+    <div class="row">
+      <div class="field"><label>Value</label><input type="number" id="value" value="1"></div>
+      <div class="field"><label>From</label><select id="fromUnit"></select></div>
+      <div class="field"><label>To</label><select id="toUnit"></select></div>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-main" id="resultMain">—</div>
     </div>
   </div>
   
@@ -108,66 +105,72 @@ canvas{ max-width:100%; border-radius:8px; border:1px solid var(--line); }
 
 <script>
 
-  let img = null, origW = 0, origH = 0, ratioLocked = true;
-  const fileInput = document.getElementById('fileInput');
-  const widthInput = document.getElementById('widthInput');
-  const heightInput = document.getElementById('heightInput');
-  const scaleRange = document.getElementById('scaleRange');
+  const units = {
+    length: { m:1, km:1000, cm:0.01, mm:0.001, mile:1609.34, yard:0.9144, foot:0.3048, inch:0.0254 },
+    weight: { kg:1, g:0.001, mg:0.000001, tonne:1000, lb:0.453592, oz:0.0283495, stone:6.35029 }
+  };
+  const labels = {
+    m:'Meters', km:'Kilometers', cm:'Centimeters', mm:'Millimeters', mile:'Miles', yard:'Yards', foot:'Feet', inch:'Inches',
+    kg:'Kilograms', g:'Grams', mg:'Milligrams', tonne:'Tonnes', lb:'Pounds', oz:'Ounces', stone:'Stone',
+    c:'Celsius', f:'Fahrenheit', k:'Kelvin'
+  };
+  const catChips = document.querySelectorAll('#catChips .chip');
+  const fromUnit = document.getElementById('fromUnit');
+  const toUnit = document.getElementById('toUnit');
+  let cat = 'length';
 
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const image = new Image();
-      image.onload = () => {
-        img = image; origW = image.width; origH = image.height;
-        widthInput.value = origW; heightInput.value = origH;
-        document.getElementById('previewImg').src = ev.target.result;
-        document.getElementById('editorArea').style.display = 'block';
-      };
-      image.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
+  function populateUnits(){
+    fromUnit.innerHTML = ''; toUnit.innerHTML = '';
+    let keys = cat === 'temp' ? ['c','f','k'] : Object.keys(units[cat]);
+    keys.forEach((k,i) => {
+      const o1 = document.createElement('option'); o1.value = k; o1.textContent = labels[k];
+      fromUnit.appendChild(o1);
+      const o2 = o1.cloneNode(true); toUnit.appendChild(o2);
+    });
+    fromUnit.selectedIndex = 0;
+    toUnit.selectedIndex = keys.length > 1 ? 1 : 0;
+  }
 
-  document.getElementById('lockRatio').addEventListener('click', function(){
-    ratioLocked = !ratioLocked;
-    this.classList.toggle('active');
-    this.textContent = ratioLocked ? '🔒 Lock aspect ratio' : '🔓 Aspect ratio unlocked';
-  });
+  catChips.forEach(c => c.addEventListener('click', () => {
+    catChips.forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    cat = c.dataset.cat;
+    populateUnits();
+    compute();
+  }));
 
-  widthInput.addEventListener('input', () => {
-    if(ratioLocked && origW) heightInput.value = Math.round(widthInput.value * (origH/origW));
-  });
-  heightInput.addEventListener('input', () => {
-    if(ratioLocked && origH) widthInput.value = Math.round(heightInput.value * (origW/origH));
-  });
+  function toCelsius(v, u){
+    if(u==='c') return v;
+    if(u==='f') return (v-32)*5/9;
+    if(u==='k') return v-273.15;
+  }
+  function fromCelsius(v, u){
+    if(u==='c') return v;
+    if(u==='f') return v*9/5+32;
+    if(u==='k') return v+273.15;
+  }
 
-  scaleRange.addEventListener('input', () => {
-    document.getElementById('scaleVal').textContent = scaleRange.value;
-    if(origW){
-      widthInput.value = Math.round(origW * (scaleRange.value/100));
-      heightInput.value = Math.round(origH * (scaleRange.value/100));
+  function compute(){
+    const val = parseFloat(document.getElementById('value').value);
+    const box = document.getElementById('resultBox');
+    if(isNaN(val)){ box.classList.remove('show'); return; }
+    let result;
+    if(cat === 'temp'){
+      const c = toCelsius(val, fromUnit.value);
+      result = fromCelsius(c, toUnit.value);
+    } else {
+      const base = val * units[cat][fromUnit.value];
+      result = base / units[cat][toUnit.value];
     }
-  });
+    document.getElementById('resultMain').textContent = `${val} ${labels[fromUnit.value]} = ${result.toLocaleString(undefined,{maximumFractionDigits:6})} ${labels[toUnit.value]}`;
+    box.classList.add('show');
+  }
 
-  document.getElementById('downloadBtn').addEventListener('click', () => {
-    if(!img) return;
-    const w = parseInt(widthInput.value) || origW;
-    const h = parseInt(heightInput.value) || origH;
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `resized-${w}x${h}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
-  });
+  document.getElementById('value').addEventListener('input', compute);
+  fromUnit.addEventListener('change', compute);
+  toUnit.addEventListener('change', compute);
+  populateUnits();
+  compute();
   
 </script>
 
