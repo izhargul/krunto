@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Image Resizer & Converter - JPG, PNG, WebP | Krunto</title>
+<meta name="description" content="Free online image resizer and converter. Resize images and convert between JPG, PNG, and WebP directly in your browser, nothing uploaded.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FBFAF6;--ink:#1F2321;--teal:#1F6F5C;--gold:#E8A33D;--card:#F1EFE7;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;}
+  a{color:inherit;text-decoration:none;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:28px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:600;font-size:1.4rem;}
+  .back{font-weight:500;font-size:0.9rem;color:var(--teal);}
+  main{max-width:640px;margin:0 auto;padding:20px 6vw 100px;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:2rem;margin-bottom:8px;}
+  .sub{color:#666;margin-bottom:36px;}
+  .drop{border:2px dashed #cfc9ba;border-radius:20px;padding:50px 20px;text-align:center;color:#888;cursor:pointer;background:#fff;}
+  .drop.drag{border-color:var(--teal);color:var(--teal);}
+  .controls{display:none;background:var(--card);border-radius:20px;padding:28px;margin-top:24px;}
+  .row2{display:flex;gap:16px;margin-bottom:16px;}
+  .row2 .field{flex:1;}
+  label{display:block;font-weight:600;font-size:0.85rem;margin-bottom:6px;}
+  input[type=number], select{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;font-family:'Inter',sans-serif;background:#fff;}
+  .preview{margin-top:20px;text-align:center;}
+  .preview img{max-width:100%;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.06);}
+  button{margin-top:20px;background:var(--teal);color:#fff;border:none;padding:12px 26px;border-radius:30px;font-weight:600;font-size:0.95rem;cursor:pointer;}
+  .lock{font-size:0.85rem;color:#666;display:flex;align-items:center;gap:6px;margin-bottom:16px;}
+  .adspace{margin-top:40px;padding:24px;text-align:center;border:1px dashed #ccc;border-radius:12px;color:#aaa;font-size:0.85rem;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Krunto</div>
+  <a class="back" href="index.html">← All tools</a>
+</header>
+<main>
+  <h1>Image Resizer & Converter</h1>
+  <p class="sub">Resize and convert images between JPG, PNG, and WebP — everything happens in your browser, nothing is uploaded anywhere.</p>
+
+  <div class="drop" id="drop">Drag & drop an image here, or click to choose one</div>
+  <input type="file" id="file" accept="image/*" style="display:none">
+
+  <div class="controls" id="controls">
+    <div class="row2">
+      <div class="field"><label>Width (px)</label><input type="number" id="width"></div>
+      <div class="field"><label>Height (px)</label><input type="number" id="height"></div>
+    </div>
+    <div class="lock"><input type="checkbox" id="lock" checked> Lock aspect ratio</div>
+    <div class="field">
+      <label>Output format</label>
+      <select id="format">
+        <option value="image/jpeg">JPG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+    </div>
+    <div class="preview"><img id="preview" alt="preview"></div>
+    <button onclick="download()">Download image</button>
+  </div>
+
+  <div class="adspace">Ad space</div>
+</main>
+<script>
+let img=new Image();
+let ratio=1;
+const drop=document.getElementById('drop');
+const fileInput=document.getElementById('file');
+drop.addEventListener('click',()=>fileInput.click());
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});
+drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');handleFile(e.dataTransfer.files[0]);});
+fileInput.addEventListener('change',e=>handleFile(e.target.files[0]));
+
+function handleFile(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    img=new Image();
+    img.onload=()=>{
+      ratio=img.width/img.height;
+      document.getElementById('width').value=img.width;
+      document.getElementById('height').value=img.height;
+      document.getElementById('controls').style.display='block';
+      renderPreview();
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('width').addEventListener('input',()=>{
+  if(document.getElementById('lock').checked){
+    document.getElementById('height').value=Math.round(document.getElementById('width').value/ratio);
+  }
+  renderPreview();
+});
+document.getElementById('height').addEventListener('input',()=>{
+  if(document.getElementById('lock').checked){
+    document.getElementById('width').value=Math.round(document.getElementById('height').value*ratio);
+  }
+  renderPreview();
+});
+document.getElementById('format').addEventListener('change',renderPreview);
+
+function renderPreview(){
+  const w=parseInt(document.getElementById('width').value)||img.width;
+  const h=parseInt(document.getElementById('height').value)||img.height;
+  const canvas=document.createElement('canvas');
+  canvas.width=w;canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(img,0,0,w,h);
+  document.getElementById('preview').src=canvas.toDataURL(document.getElementById('format').value,0.92);
+  window.currentCanvas=canvas;
+}
+
+function download(){
+  if(!window.currentCanvas) return;
+  const format=document.getElementById('format').value;
+  const ext=format.split('/')[1];
+  const link=document.createElement('a');
+  link.download='krunto-image.'+ext;
+  link.href=window.currentCanvas.toDataURL(format,0.92);
+  link.click();
+}
+</script>
+</body>
+</html>

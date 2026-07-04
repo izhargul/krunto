@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Word Counter & Readability Checker | Krunto</title>
+<meta name="description" content="Free word counter tool. Count words and characters, estimate reading time, and check readability score instantly as you type.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,400&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FBFAF6;--ink:#1F2321;--teal:#1F6F5C;--gold:#E8A33D;--card:#F1EFE7;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;}
+  a{color:inherit;text-decoration:none;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:28px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:600;font-size:1.4rem;}
+  .back{font-weight:500;font-size:0.9rem;color:var(--teal);}
+  main{max-width:720px;margin:0 auto;padding:20px 6vw 100px;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:2rem;margin-bottom:8px;}
+  .sub{color:#666;margin-bottom:32px;}
+  textarea{width:100%;min-height:260px;padding:20px;border:1px solid #ddd;border-radius:16px;font-family:'Inter',sans-serif;font-size:1.05rem;resize:vertical;background:#fff;}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px;margin-top:24px;}
+  .stat{background:var(--card);border-radius:16px;padding:20px;text-align:center;}
+  .stat b{display:block;font-family:'IBM Plex Mono',monospace;font-size:1.5rem;color:var(--teal);}
+  .stat span{font-size:0.8rem;color:#777;}
+  .note{margin-top:50px;font-size:0.95rem;color:#555;}
+  .adspace{margin-top:40px;padding:24px;text-align:center;border:1px dashed #ccc;border-radius:12px;color:#aaa;font-size:0.85rem;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Krunto</div>
+  <a class="back" href="index.html">← All tools</a>
+</header>
+<main>
+  <h1>Word Counter</h1>
+  <p class="sub">Count words and characters, estimate reading time, and check readability as you type.</p>
+
+  <textarea id="text" placeholder="Paste or type your text here..."></textarea>
+
+  <div class="stats">
+    <div class="stat"><b id="words">0</b><span>Words</span></div>
+    <div class="stat"><b id="chars">0</b><span>Characters</span></div>
+    <div class="stat"><b id="sentences">0</b><span>Sentences</span></div>
+    <div class="stat"><b id="readtime">0 min</b><span>Reading time</span></div>
+    <div class="stat"><b id="flesch">—</b><span>Readability</span></div>
+  </div>
+
+  <div class="adspace">Ad space</div>
+
+  <div class="note">
+    <p><strong>What is the Flesch score?</strong> It measures how easy your text is to read on a 0–100 scale. Higher scores mean easier reading: 90+ is very easy, 60–70 is standard, and below 30 is very difficult.</p>
+  </div>
+</main>
+<script>
+function countSyllables(word){
+  word=word.toLowerCase().replace(/[^a-z]/g,'');
+  if(word.length<=3) return 1;
+  word=word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/,'');
+  word=word.replace(/^y/,'');
+  const matches=word.match(/[aeiouy]{1,2}/g);
+  return matches?matches.length:1;
+}
+document.getElementById('text').addEventListener('input',()=>{
+  const text=document.getElementById('text').value;
+  const words=text.trim()?text.trim().split(/\s+/):[];
+  const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>0);
+  const chars=text.length;
+  document.getElementById('words').textContent=words.length;
+  document.getElementById('chars').textContent=chars;
+  document.getElementById('sentences').textContent=sentences.length;
+  document.getElementById('readtime').textContent=Math.max(1,Math.round(words.length/200))+' min';
+
+  if(words.length>0 && sentences.length>0){
+    let syllables=0;
+    words.forEach(w=>syllables+=countSyllables(w));
+    const flesch=206.835 - 1.015*(words.length/sentences.length) - 84.6*(syllables/words.length);
+    document.getElementById('flesch').textContent=Math.max(0,Math.min(100,Math.round(flesch)));
+  } else {
+    document.getElementById('flesch').textContent='—';
+  }
+});
+</script>
+</body>
+</html>
