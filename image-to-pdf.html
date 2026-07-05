@@ -12,16 +12,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-  :root{
-    --ink:#161b22;
-    --paper:#f7f7f5;
-    --card:#ffffff;
-    --line:#e3e2dd;
-    --accent:#1f5f5b;
-    --accent-dim:#e8f0ef;
-    --accent-ink:#0f3d3a;
-    --danger:#b3402f;
-    --muted:#6b6f76;
+    :root{
+  --ink:#161b22; --paper:#f7f7f5; --card:#ffffff; --line:#e3e2dd;
+  --accent:#0d9488; --accent-dim:#e8f6f4; --accent-ink:#0b6b60; --muted:#6b6f76; --danger:#c0392b;
   }
   *{box-sizing:border-box;}
   body{
@@ -251,6 +244,29 @@
     font-size:13px;
   }
   footer a{ color:var(--accent-ink); }
+
+
+/* --- Krunto dark shell (auto-applied) --- */
+body{background:#0B0E14 !important;}
+header{background:#12161F !important; border-bottom:1px solid #242A38 !important;}
+header a.home{color:#8A93A6 !important;}
+header a.home:hover{color:#5EEAD4 !important;}
+header h1{color:#E8EAED !important;}
+header p{color:#8A93A6 !important;}
+footer{color:#8A93A6 !important;}
+footer a{color:#5EEAD4 !important;}
+.info-block h2{color:#E8EAED !important;}
+.info-block p{color:#8A93A6 !important;}
+.chip{border-color:#e3e2dd !important;}
+
+.dropzone{background:#181D29 !important; border-color:#333c4e !important;}
+.dropzone.drag{background:#132621 !important; border-color:#5EEAD4 !important;}
+.dropzone .hint{color:#8A93A6 !important;}
+
+.thumb{background:#12161F !important; border-color:#242A38 !important;}
+.thumb img{background:#0B0E14 !important;}
+.thumb .bar{color:#8A93A6 !important;}
+button.primary:disabled{background:#333c4e !important; color:#6b7280 !important;}
 </style>
 </head>
 <body>

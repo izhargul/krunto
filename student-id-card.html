@@ -10,9 +10,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-  :root{
-    --ink:#161b22; --paper:#f7f7f5; --card:#ffffff; --line:#e3e2dd;
-    --accent:#1f5f5b; --accent-dim:#e8f0ef; --accent-ink:#0f3d3a; --muted:#6b6f76;
+    :root{
+  --ink:#161b22; --paper:#f7f7f5; --card:#ffffff; --line:#e3e2dd;
+  --accent:#0d9488; --accent-dim:#e8f6f4; --accent-ink:#0b6b60; --muted:#6b6f76; --danger:#c0392b;
   }
   *{box-sizing:border-box;}
   body{ margin:0; font-family:'Segoe UI', system-ui, -apple-system, sans-serif; background:var(--paper); color:var(--ink); line-height:1.5; }
@@ -63,6 +63,20 @@
   .info-block p{ color:var(--muted); font-size:14.5px; }
   footer{ text-align:center; padding:24px; color:var(--muted); font-size:13px; }
   footer a{ color:var(--accent-ink); }
+
+
+/* --- Krunto dark shell (auto-applied) --- */
+body{background:#0B0E14 !important;}
+header{background:#12161F !important; border-bottom:1px solid #242A38 !important;}
+header a.home{color:#8A93A6 !important;}
+header a.home:hover{color:#5EEAD4 !important;}
+header h1{color:#E8EAED !important;}
+header p{color:#8A93A6 !important;}
+footer{color:#8A93A6 !important;}
+footer a{color:#5EEAD4 !important;}
+.info-block h2{color:#E8EAED !important;}
+.info-block p{color:#8A93A6 !important;}
+.chip{border-color:#e3e2dd !important;}
 </style>
 </head>
 <body>
@@ -93,9 +107,13 @@
 
       <div class="row" style="margin-top:14px;">
         <div class="field"><label>Full name</label><input id="studentName" placeholder="Ahmed Raza"></div>
+        <div class="field"><label>Father's name</label><input id="fatherName" placeholder="Muhammad Raza"></div>
       </div>
       <div class="row">
         <div class="field"><label>Institute / School name</label><input id="instituteName" placeholder="Punjab Public College"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Address (optional)</label><input id="address" placeholder="House 12, Model Town, Lahore"></div>
       </div>
       <div class="row">
         <div class="field"><label>Roll / Registration No.</label><input id="rollNo" placeholder="2026-CS-045"></div>
@@ -181,7 +199,7 @@ document.getElementById('templatePicker').addEventListener('click', e => {
   drawCard();
 });
 
-['studentName','instituteName','rollNo','course','bloodGroup','validUntil','contactNo'].forEach(id => {
+['studentName','fatherName','instituteName','address','rollNo','course','bloodGroup','validUntil','contactNo'].forEach(id => {
   document.getElementById(id).addEventListener('input', drawCard);
 });
 
@@ -193,6 +211,46 @@ function roundRect(ctx, x, y, w, h, r){
   ctx.arcTo(x, y+h, x, y, r);
   ctx.arcTo(x, y, x+w, y, r);
   ctx.closePath();
+}
+
+function clipToWidth(ctx, text, maxWidth){
+  if(ctx.measureText(text).width <= maxWidth) return text;
+  let t = text;
+  while(t.length > 1 && ctx.measureText(t + '…').width > maxWidth){
+    t = t.slice(0, -1);
+  }
+  return t + '…';
+}
+
+function wrapToWidth(ctx, text, maxWidth, maxLines){
+  const words = text.split(/\s+/);
+  const lines = [];
+  let current = '';
+  for(const word of words){
+    const test = current ? current + ' ' + word : word;
+    if(ctx.measureText(test).width > maxWidth && current){
+      lines.push(current);
+      current = word;
+      if(lines.length === maxLines - 1){
+        break;
+      }
+    } else {
+      current = test;
+    }
+  }
+  if(current) lines.push(current);
+  if(lines.length > maxLines) lines.length = maxLines;
+  const lastIdx = lines.length - 1;
+  if(lastIdx >= 0 && ctx.measureText(lines[lastIdx]).width > maxWidth){
+    lines[lastIdx] = clipToWidth(ctx, lines[lastIdx], maxWidth);
+  } else if(lines.length === maxLines){
+    // check if there was leftover text not included
+    const consumedWords = lines.join(' ').split(/\s+/).length;
+    if(consumedWords < words.length){
+      lines[lastIdx] = clipToWidth(ctx, lines[lastIdx] + '…', maxWidth);
+    }
+  }
+  return lines;
 }
 
 function shadeColor(hex, percent){
@@ -245,21 +303,44 @@ function drawCard(){
   ctx.fill();
   ctx.restore();
 
-  // Institute logo circle placeholder
+  // Institute badge — graduation cap icon (professional, works for any institute)
+  const badgeCx = W-56, badgeCy = 50, badgeR = 26;
   ctx.beginPath();
-  ctx.arc(W-56, 50, 26, 0, Math.PI*2);
+  ctx.arc(badgeCx, badgeCy, badgeR, 0, Math.PI*2);
   ctx.fillStyle = 'rgba(255,255,255,0.15)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.5)';
   ctx.lineWidth = 1.5;
   ctx.stroke();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 18px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const instituteInitial = (document.getElementById('instituteName').value || 'K').trim().charAt(0).toUpperCase();
-  ctx.fillText(instituteInitial, W-56, 51);
-  ctx.textAlign = 'left';
+
+  ctx.save();
+  ctx.translate(badgeCx, badgeCy - 2);
+  // Mortarboard top (diamond)
+  ctx.beginPath();
+  ctx.moveTo(-15, -1);
+  ctx.lineTo(0, -7.5);
+  ctx.lineTo(15, -1);
+  ctx.lineTo(0, 4.5);
+  ctx.closePath();
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  // Cap base band
+  ctx.beginPath();
+  roundRect(ctx, -7, -1, 14, 6, 1.5);
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.fill();
+  // Tassel
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  ctx.moveTo(9.5, -1.5);
+  ctx.lineTo(9.5, 9);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(9.5, 10.5, 1.6, 0, Math.PI*2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.restore();
 
   // Institute name
   const instituteName = document.getElementById('instituteName').value || 'Your Institute Name';
@@ -318,14 +399,17 @@ function drawCard(){
 
   // Details
   const name = document.getElementById('studentName').value || 'Student Name';
+  const fatherName = document.getElementById('fatherName').value;
   const roll = document.getElementById('rollNo').value;
   const course = document.getElementById('course').value;
   const blood = document.getElementById('bloodGroup').value;
   const valid = document.getElementById('validUntil').value;
   const contact = document.getElementById('contactNo').value;
+  const address = document.getElementById('address').value;
 
   let dx = photoX + photoW + 26;
   let dy = 132;
+  const detailAreaWidth = W - dx - 26;
 
   ctx.fillStyle = '#161b22';
   ctx.font = '700 21px Arial, sans-serif';
@@ -337,67 +421,54 @@ function drawCard(){
   ctx.moveTo(dx, dy+8);
   ctx.lineTo(dx+40, dy+8);
   ctx.stroke();
-  dy += 34;
+  dy += 26;
 
-  function detailLine(labelText, value){
+  // Compact 2-column grid for short fields
+  const colGap = 14;
+  const colW = (detailAreaWidth - colGap) / 2;
+  const col1X = dx, col2X = dx + colW + colGap;
+  const rowH = 30;
+
+  function gridCell(x, y, labelText, value){
     if(!value) return;
     ctx.fillStyle = '#8a8f98';
-    ctx.font = '600 10px Arial, sans-serif';
-    ctx.fillText(labelText.toUpperCase(), dx, dy);
-    dy += 15;
+    ctx.font = '600 9px Arial, sans-serif';
+    ctx.fillText(labelText.toUpperCase(), x, y);
     ctx.fillStyle = '#161b22';
-    ctx.font = '600 14px Arial, sans-serif';
-    ctx.fillText(value, dx, dy);
-    dy += 21;
+    ctx.font = '600 13px Arial, sans-serif';
+    const clipped = clipToWidth(ctx, value, colW);
+    ctx.fillText(clipped, x, y+15);
   }
 
-  detailLine('Roll / Reg. No.', roll);
-  detailLine('Course', course);
-  detailLine('Blood Group', blood);
-  detailLine('Valid Until', valid);
-  detailLine('Emergency Contact', contact);
+  const gridRows = [
+    ['Father\'s Name', fatherName, 'Roll / Reg. No.', roll],
+    ['Course', course, 'Blood Group', blood],
+    ['Valid Until', valid, 'Emergency Contact', contact]
+  ];
+  gridRows.forEach(([l1,v1,l2,v2]) => {
+    if(!v1 && !v2){ return; }
+    gridCell(col1X, dy, l1, v1);
+    gridCell(col2X, dy, l2, v2);
+    dy += rowH;
+  });
+
+  // Address — full width, wraps up to 2 lines
+  if(address){
+    ctx.fillStyle = '#8a8f98';
+    ctx.font = '600 9px Arial, sans-serif';
+    ctx.fillText('ADDRESS', dx, dy);
+    dy += 13;
+    ctx.fillStyle = '#161b22';
+    ctx.font = '600 12.5px Arial, sans-serif';
+    const addrLines = wrapToWidth(ctx, address, detailAreaWidth, 2);
+    addrLines.forEach(line => { ctx.fillText(line, dx, dy); dy += 15; });
+  }
 
   // Card ID number below photo (fills empty space, looks official)
   const cardId = 'ID-' + (Math.abs((name+roll).split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % 90000 + 10000);
   ctx.fillStyle = '#8a8f98';
   ctx.font = '600 9px Arial, sans-serif';
   ctx.fillText(cardId, photoX, photoY+photoH+18);
-
-  // Authorized signature line + stamp, bottom right area — fills the empty lower-right space
-  const sigY = H-64;
-  const sigX2 = W-30;
-  const sigX1 = sigX2-120;
-  ctx.strokeStyle = '#cfcfc9';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(sigX1, sigY);
-  ctx.lineTo(sigX2, sigY);
-  ctx.stroke();
-  ctx.fillStyle = '#8a8f98';
-  ctx.font = '600 9px Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('AUTHORIZED SIGNATURE', (sigX1+sigX2)/2, sigY+13);
-  ctx.textAlign = 'left';
-
-  // Circular verified stamp
-  const stampX = sigX1 - 44, stampY = sigY - 14;
-  ctx.save();
-  ctx.strokeStyle = themeColor;
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = 2;
-  ctx.setLineDash([3,2]);
-  ctx.beginPath();
-  ctx.arc(stampX, stampY, 24, 0, Math.PI*2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = themeColor;
-  ctx.font = '700 8px Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('VERIFIED', stampX, stampY-2);
-  ctx.font = '700 12px Arial, sans-serif';
-  ctx.fillText('\u2713', stampX, stampY+11);
-  ctx.textAlign = 'left';
-  ctx.restore();
 
   // Fine print note filling the strip just above the barcode
   ctx.fillStyle = '#a3a7ad';
