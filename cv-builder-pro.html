@@ -3,16 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Professional CV / Resume Builder — Free PDF Download | Krunto</title>
-<meta name="description" content="Build a professional CV with ready-made phrase suggestions for summaries, experience, and skills. Clean formatted headings, instant PDF download, works offline.">
+<title>Free CV / Resume Builder - ATS-Friendly Templates, PDF Download | Krunto</title>
+<meta name="description" content="Build a professional, ATS-friendly resume with ready-made phrase suggestions and download it as a PDF. Free CV builder.">
 
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7143130602873663" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-    :root{
-  --ink:#161b22; --paper:#f7f7f5; --card:#ffffff; --line:#e3e2dd;
-  --accent:#0d9488; --accent-dim:#e8f6f4; --accent-ink:#0b6b60; --muted:#6b6f76; --danger:#c0392b;
+  :root{
+    --ink:#161b22;
+    --paper:#f7f7f5;
+    --card:#ffffff;
+    --line:#e3e2dd;
+    --accent:#1f5f5b;
+    --accent-dim:#e8f0ef;
+    --accent-ink:#0f3d3a;
+    --muted:#6b6f76;
   }
   *{box-sizing:border-box;}
   body{
@@ -244,20 +250,6 @@
   .info-block p{ color:var(--muted); font-size:14.5px; }
   footer{ text-align:center; padding:24px; color:var(--muted); font-size:13px; }
   footer a{ color:var(--accent-ink); }
-
-
-/* --- Krunto dark shell (auto-applied) --- */
-body{background:#0B0E14 !important;}
-header{background:#12161F !important; border-bottom:1px solid #242A38 !important;}
-header a.home{color:#8A93A6 !important;}
-header a.home:hover{color:#5EEAD4 !important;}
-header h1{color:#E8EAED !important;}
-header p{color:#8A93A6 !important;}
-footer{color:#8A93A6 !important;}
-footer a{color:#5EEAD4 !important;}
-.info-block h2{color:#E8EAED !important;}
-.info-block p{color:#8A93A6 !important;}
-.chip{border-color:#e3e2dd !important;}
 </style>
 </head>
 <body>
@@ -278,7 +270,7 @@ footer a{color:#5EEAD4 !important;}
       <div class="row">
         <div class="field" style="flex:0 0 96px;">
           <label>Photo (optional)</label>
-          <div id="photoDrop" style="width:88px;height:110px;border:1.5px dashed #b7c4c2;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fafaf8;overflow:hidden;text-align:center;position:relative;">
+          <div id="photoDrop" style="width:88px;height:110px;border:1.5px dashed #b7c4c2;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fafaf8;overflow:hidden;text-align:center;">
             <span id="photoPlaceholder" style="font-size:10.5px;color:var(--muted);padding:6px;">Click to upload passport-size photo</span>
             <img id="photoPreview" style="display:none;width:100%;height:100%;object-fit:cover;">
           </div>
@@ -556,6 +548,32 @@ document.body.addEventListener('input', e => {
   document.getElementById(id).addEventListener('input', updatePreview);
 });
 
+let photoDataUrl = null;
+document.getElementById('photoDrop').addEventListener('click', () => document.getElementById('photoInput').click());
+document.getElementById('photoInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    photoDataUrl = ev.target.result;
+    document.getElementById('photoPreview').src = photoDataUrl;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    document.getElementById('removePhoto').style.display = 'block';
+    updatePreview();
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('removePhoto').addEventListener('click', (e) => {
+  e.stopPropagation();
+  photoDataUrl = null;
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoPlaceholder').style.display = 'block';
+  document.getElementById('removePhoto').style.display = 'none';
+  updatePreview();
+});
+
 function esc(s){
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -573,9 +591,12 @@ function updatePreview(){
 
   let html = '';
 
-  if(!fullName && !jobTitle && experiences.length===0 && educations.length===0 && !summary && skills.length===0){
+  if(!fullName && !jobTitle && experiences.length===0 && educations.length===0 && !summary && skills.length===0 && !photoDataUrl){
     html = '<div class="empty-note">Your CV preview will appear here as you fill in the form.</div>';
   } else {
+    if(photoDataUrl){
+      html += `<img src="${photoDataUrl}" style="width:80px;height:100px;object-fit:cover;border-radius:4px;float:right;margin-left:12px;border:1px solid #ddd;">`;
+    }
     html += `<div class="cv-name">${esc(fullName) || 'Your Name'}</div>`;
     if(jobTitle) html += `<div class="cv-title">${esc(jobTitle)}</div>`;
     if(contactParts.length) html += `<div class="cv-contact">${contactParts.map(esc).join('  •  ')}</div>`;
@@ -619,30 +640,6 @@ function updatePreview(){
 
 updatePreview();
 
-let photoDataUrl = null;
-document.getElementById('photoDrop').addEventListener('click', () => document.getElementById('photoInput').click());
-document.getElementById('photoInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    photoDataUrl = ev.target.result;
-    document.getElementById('photoPreview').src = photoDataUrl;
-    document.getElementById('photoPreview').style.display = 'block';
-    document.getElementById('photoPlaceholder').style.display = 'none';
-    document.getElementById('removePhoto').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-});
-document.getElementById('removePhoto').addEventListener('click', (e) => {
-  e.stopPropagation();
-  photoDataUrl = null;
-  document.getElementById('photoInput').value = '';
-  document.getElementById('photoPreview').style.display = 'none';
-  document.getElementById('photoPlaceholder').style.display = 'block';
-  document.getElementById('removePhoto').style.display = 'none';
-});
-
 // PDF generation — text based for crisp, ATS-friendly output
 document.getElementById('downloadBtn').addEventListener('click', () => {
   const { jsPDF } = window.jspdf;
@@ -651,18 +648,6 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
   const marginX = 50;
   const usableWidth = pageWidth - marginX*2;
   let y = 56;
-
-  if(photoDataUrl){
-    const photoW = 68, photoH = 86;
-    const photoX = pageWidth - marginX - photoW;
-    const photoY = 30;
-    try{
-      doc.setDrawColor(200);
-      doc.setLineWidth(1);
-      doc.rect(photoX, photoY, photoW, photoH);
-      doc.addImage(photoDataUrl, photoX, photoY, photoW, photoH);
-    }catch(err){ console.error('Could not embed photo:', err); }
-  }
 
   const fullName = document.getElementById('fullName').value || 'Your Name';
   const jobTitle = document.getElementById('jobTitle').value;
