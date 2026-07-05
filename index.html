@@ -92,9 +92,15 @@
 <body>
 <div class="bg-logo">
   <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-    <path d="M22 14 L22 50" stroke="#5EEAD4" stroke-width="5" stroke-linecap="round"/>
-    <path d="M22 32 L40 14" stroke="#5EEAD4" stroke-width="5" stroke-linecap="round"/>
-    <path d="M22 32 L40 50" stroke="#818CF8" stroke-width="5" stroke-linecap="round"/>
+    <defs>
+      <linearGradient id="bgToast" x1="18" y1="14" x2="42" y2="56" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#FBE3A8"/>
+        <stop offset="0.55" stop-color="#F0B85B"/>
+        <stop offset="1" stop-color="#C06B2C"/>
+      </linearGradient>
+    </defs>
+    <path d="M16 54 L16 30 A17 17 0 0 1 48 30 A11 11 0 0 0 48 52 L48 54 Z" fill="url(#bgToast)"/>
+    <path d="M16 30 A17 17 0 0 1 48 30" fill="none" stroke="#A85D2A" stroke-width="3" stroke-linecap="round"/>
   </svg>
 </div>
 

@@ -276,6 +276,15 @@ footer a{color:#5EEAD4 !important;}
     <div class="section">
       <h2>Personal details</h2>
       <div class="row">
+        <div class="field" style="flex:0 0 96px;">
+          <label>Photo (optional)</label>
+          <div id="photoDrop" style="width:88px;height:110px;border:1.5px dashed #b7c4c2;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fafaf8;overflow:hidden;text-align:center;position:relative;">
+            <span id="photoPlaceholder" style="font-size:10.5px;color:var(--muted);padding:6px;">Click to upload passport-size photo</span>
+            <img id="photoPreview" style="display:none;width:100%;height:100%;object-fit:cover;">
+          </div>
+          <input type="file" id="photoInput" accept="image/*" style="display:none;">
+          <button type="button" id="removePhoto" style="display:none;background:none;border:none;color:#b3402f;font-size:11px;cursor:pointer;padding:4px 0;text-align:left;">Remove photo</button>
+        </div>
         <div class="field"><label>Full name</label><input id="fullName" placeholder="Ayesha Khan"></div>
         <div class="field"><label>Target job title</label><input id="jobTitle" placeholder="Marketing Executive"></div>
       </div>
@@ -610,6 +619,30 @@ function updatePreview(){
 
 updatePreview();
 
+let photoDataUrl = null;
+document.getElementById('photoDrop').addEventListener('click', () => document.getElementById('photoInput').click());
+document.getElementById('photoInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    photoDataUrl = ev.target.result;
+    document.getElementById('photoPreview').src = photoDataUrl;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    document.getElementById('removePhoto').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('removePhoto').addEventListener('click', (e) => {
+  e.stopPropagation();
+  photoDataUrl = null;
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoPlaceholder').style.display = 'block';
+  document.getElementById('removePhoto').style.display = 'none';
+});
+
 // PDF generation — text based for crisp, ATS-friendly output
 document.getElementById('downloadBtn').addEventListener('click', () => {
   const { jsPDF } = window.jspdf;
@@ -618,6 +651,18 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
   const marginX = 50;
   const usableWidth = pageWidth - marginX*2;
   let y = 56;
+
+  if(photoDataUrl){
+    const photoW = 68, photoH = 86;
+    const photoX = pageWidth - marginX - photoW;
+    const photoY = 30;
+    try{
+      doc.setDrawColor(200);
+      doc.setLineWidth(1);
+      doc.rect(photoX, photoY, photoW, photoH);
+      doc.addImage(photoDataUrl, photoX, photoY, photoW, photoH);
+    }catch(err){ console.error('Could not embed photo:', err); }
+  }
 
   const fullName = document.getElementById('fullName').value || 'Your Name';
   const jobTitle = document.getElementById('jobTitle').value;
