@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Files to PDF Converter — Images, Text & Excel to PDF | Krunto</title>
+<meta name="description" content="Convert images, text files, and Excel spreadsheets into a single PDF for free. Works entirely in your browser — no upload, no signup.">
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7143130602873663" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/SheetJS/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+  :root{
+    --ink:#161b22; --paper:#f7f7f5; --card:#ffffff; --line:#e3e2dd;
+    --accent:#0d9488; --accent-dim:#e8f6f4; --accent-ink:#0b6b60; --muted:#6b6f76; --danger:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Segoe UI', system-ui, -apple-system, sans-serif; background:var(--paper); color:var(--ink); line-height:1.5; }
+  header{ padding:28px 20px 20px; text-align:center; border-bottom:1px solid var(--line); background:var(--card); }
+  header a.home{ display:inline-block; font-size:13px; color:var(--muted); text-decoration:none; margin-bottom:10px; }
+  header a.home:hover{ color:var(--accent-ink); }
+  h1{ font-size:28px; margin:0 0 6px; letter-spacing:-0.02em; }
+  header p{ color:var(--muted); margin:0; font-size:15px; }
+  main{ max-width:900px; margin:0 auto; padding:28px 20px 60px; }
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:24px; margin-bottom:20px; }
+
+  .type-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .type-tab{ padding:8px 16px; border-radius:20px; border:1px solid var(--line); background:#fff; font-size:13.5px; font-weight:600; color:var(--muted); cursor:default; display:flex; align-items:center; gap:6px; }
+  .type-tab .dot{ width:7px; height:7px; border-radius:50%; }
+
+  .dropzone{ border:2px dashed #c7cdd6; border-radius:12px; padding:40px 20px; text-align:center; cursor:pointer; transition:border-color .15s, background .15s; background:#fbfbfa; }
+  .dropzone.drag{ border-color:var(--accent); background:var(--accent-dim); }
+  .dropzone .icon{ font-size:34px; margin-bottom:10px; }
+  .dropzone strong{ color:var(--accent-ink); }
+  .dropzone input{ display:none; }
+  .hint{ font-size:13px; color:var(--muted); margin-top:8px; }
+
+  .options{ display:flex; flex-wrap:wrap; gap:18px; margin-top:18px; }
+  .field{ display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--muted); font-weight:600; }
+  select{ padding:9px 10px; border-radius:8px; border:1px solid var(--line); font-size:14px; background:#fff; min-width:160px; }
+
+  .list{ margin-top:20px; display:flex; flex-direction:column; gap:10px; }
+  .file-row{ display:flex; align-items:center; gap:12px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:#fff; }
+  .file-row .thumb{ width:44px; height:44px; border-radius:8px; object-fit:cover; background:#eee; flex-shrink:0; }
+  .file-row .badge{ width:44px; height:44px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; }
+  .file-row .info{ flex:1; min-width:0; }
+  .file-row .name{ font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .file-row .meta{ font-size:12px; color:var(--muted); }
+  .file-row .order-btns{ display:flex; gap:2px; flex-shrink:0; }
+  .file-row button{ background:none; border:none; cursor:pointer; font-size:14px; padding:4px 6px; color:var(--muted); }
+  .file-row button:hover{ color:var(--danger); }
+  .file-row .order-btns button:hover{ color:var(--accent-ink); }
+
+  .actions{ display:flex; gap:12px; margin-top:22px; flex-wrap:wrap; }
+  button.primary{ background:var(--accent); color:#fff; border:none; padding:13px 26px; border-radius:9px; font-size:15px; font-weight:700; cursor:pointer; transition:background .15s; }
+  button.primary:hover{ background:var(--accent-ink); }
+  button.primary:disabled{ background:#b9c2c1; cursor:not-allowed; }
+  button.secondary{ background:none; border:1px solid var(--line); padding:13px 22px; border-radius:9px; font-size:15px; font-weight:600; cursor:pointer; color:var(--muted); }
+  button.secondary:hover{ border-color:var(--accent); color:var(--accent-ink); }
+
+  .status{ font-size:13px; color:var(--muted); margin-top:10px; }
+  .error-text{ color:var(--danger); font-size:13px; margin-top:8px; }
+
+  .info-block{ margin-top:36px; }
+  .info-block h2{ font-size:18px; margin-bottom:8px; }
+  .info-block p{ color:var(--muted); font-size:14.5px; }
+  .steps{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:12px; }
+  .step{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  .step .n{ display:inline-block; width:24px; height:24px; background:var(--accent-dim); color:var(--accent-ink); border-radius:50%; text-align:center; line-height:24px; font-size:13px; font-weight:700; margin-bottom:8px; }
+  .ad-slot{ text-align:center; margin:26px 0; min-height:90px; }
+  footer{ text-align:center; padding:24px; color:var(--muted); font-size:13px; }
+  footer a{ color:var(--accent-ink); }
+
+  /* --- Krunto dark shell (auto-applied) --- */
+  body{background:#0B0E14 !important;}
+  header{background:#12161F !important; border-bottom:1px solid #242A38 !important;}
+  header a.home{color:#8A93A6 !important;}
+  header a.home:hover{color:#5EEAD4 !important;}
+  header h1{color:#E8EAED !important;}
+  header p{color:#8A93A6 !important;}
+  footer{color:#8A93A6 !important;}
+  footer a{color:#5EEAD4 !important;}
+  .info-block h2{color:#E8EAED !important;}
+  .info-block p{color:#8A93A6 !important;}
+  .dropzone{background:#181D29 !important; border-color:#333c4e !important;}
+  .dropzone.drag{background:#132621 !important; border-color:#5EEAD4 !important;}
+  .dropzone .hint{color:#8A93A6 !important;}
+  .type-tab{background:#181D29 !important; border-color:#242A38 !important; color:#8A93A6 !important;}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="home" href="index.html">← All Krunto tools</a>
+  <h1>Files to PDF Converter</h1>
+  <p>Combine images, text files, and Excel spreadsheets into a single PDF. Runs fully in your browser — nothing is uploaded.</p>
+</header>
+
+<main>
+  <div class="panel">
+    <div class="type-tabs">
+      <span class="type-tab"><span class="dot" style="background:#F59E0B"></span> Images (JPG, PNG, WebP)</span>
+      <span class="type-tab"><span class="dot" style="background:#2563EB"></span> Text (.txt)</span>
+      <span class="type-tab"><span class="dot" style="background:#059669"></span> Spreadsheets (.xlsx, .csv)</span>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <div class="icon">📎</div>
+      <strong>Click to choose files</strong> or drag and drop them here
+      <div class="hint">Supports JPG, PNG, WebP, GIF, TXT, XLSX, XLS, CSV · Multiple files at once</div>
+      <input type="file" id="fileInput" accept="image/*,.txt,.xlsx,.xls,.csv" multiple>
+    </div>
+
+    <div class="options">
+      <div class="field">
+        Page size
+        <select id="pageSize">
+          <option value="a4">A4</option>
+          <option value="letter">Letter</option>
+        </select>
+      </div>
+      <div class="field">
+        Orientation
+        <select id="orientation">
+          <option value="portrait">Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select>
+      </div>
+      <div class="field">
+        Margin
+        <select id="margin">
+          <option value="24">Small</option>
+          <option value="40" selected>Medium</option>
+          <option value="60">Large</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="list" id="list"></div>
+
+    <div class="actions">
+      <button class="primary" id="convertBtn" disabled>Convert to PDF</button>
+      <button class="secondary" id="clearBtn">Clear all</button>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="error-text" id="errorText"></div>
+  </div>
+
+  <div class="ad-slot">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7143130602873663" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  </div>
+
+  <div class="info-block">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><div>Add images, text files, or spreadsheets by clicking the box above or dragging files in.</div></div>
+      <div class="step"><span class="n">2</span><div>Reorder with the arrows, remove anything you don't need, then choose page size and orientation.</div></div>
+      <div class="step"><span class="n">3</span><div>Click Convert. All your files are combined into one PDF, in order, and download instantly.</div></div>
+    </div>
+  </div>
+
+  <div class="info-block">
+    <h2>Why use this tool</h2>
+    <p>Everything happens on your device — nothing is uploaded to a server, so there's no wait and no privacy concern. Mix and match images, plain text notes, and spreadsheet data into one shareable PDF. Excel and CSV files are converted into clean tables, and text files keep their formatting. Completely free, with no account required.</p>
+    <p style="margin-top:10px;font-size:13px;">Note: this tool handles images, text, and spreadsheets entirely in your browser for speed and privacy. Word documents (.docx) and PowerPoint (.pptx) are not yet supported here, since accurate formatting for those requires a different conversion approach — support for those may be added as a separate tool.</p>
+  </div>
+</main>
+
+<footer>
+  <a href="index.html">More free tools on Krunto</a>
+</footer>
+
+<script>
+const { jsPDF } = window.jspdf;
+
+let items = []; // {file, id, kind: 'image'|'text'|'sheet', dataUrl?, textContent?, sheetData?}
+let idCounter = 0;
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const list = document.getElementById('list');
+const convertBtn = document.getElementById('convertBtn');
+const clearBtn = document.getElementById('clearBtn');
+const statusEl = document.getElementById('status');
+const errorEl = document.getElementById('errorText');
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+clearBtn.addEventListener('click', () => { items = []; render(); });
+
+function kindOf(file){
+  if(file.type.startsWith('image/')) return 'image';
+  const name = file.name.toLowerCase();
+  if(name.endsWith('.txt')) return 'text';
+  if(name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) return 'sheet';
+  return null;
+}
+
+function handleFiles(fileList){
+  errorEl.textContent = '';
+  [...fileList].forEach(file => {
+    const kind = kindOf(file);
+    if(!kind){
+      errorEl.textContent = `Skipped "${file.name}" — unsupported file type.`;
+      return;
+    }
+    const id = idCounter++;
+    if(kind === 'image'){
+      const reader = new FileReader();
+      reader.onload = e => {
+        items.push({ id, name: file.name, kind, dataUrl: e.target.result });
+        render();
+      };
+      reader.readAsDataURL(file);
+    } else if(kind === 'text'){
+      const reader = new FileReader();
+      reader.onload = e => {
+        items.push({ id, name: file.name, kind, textContent: e.target.result });
+        render();
+      };
+      reader.readAsText(file);
+    } else if(kind === 'sheet'){
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          const sheetName = wb.SheetNames[0];
+          const sheet = wb.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+          items.push({ id, name: file.name, kind, sheetData: rows, sheetName });
+          render();
+        } catch(err){
+          errorEl.textContent = `Could not read "${file.name}" — is it a valid spreadsheet?`;
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  });
+  fileInput.value = '';
+}
+
+function badgeColor(kind){
+  if(kind === 'image') return '#F59E0B';
+  if(kind === 'text') return '#2563EB';
+  if(kind === 'sheet') return '#059669';
+  return '#999';
+}
+function badgeLabel(kind){
+  if(kind === 'image') return 'IMG';
+  if(kind === 'text') return 'TXT';
+  if(kind === 'sheet') return 'XLS';
+  return '?';
+}
+
+function render(){
+  list.innerHTML = '';
+  items.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'file-row';
+    const thumb = f.kind === 'image'
+      ? `<img class="thumb" src="${f.dataUrl}" alt="${f.name}">`
+      : `<div class="badge" style="background:${badgeColor(f.kind)}">${badgeLabel(f.kind)}</div>`;
+    let meta = '';
+    if(f.kind === 'sheet') meta = `${f.sheetData.length} row${f.sheetData.length===1?'':'s'} · sheet "${f.sheetName}"`;
+    if(f.kind === 'text') meta = `${f.textContent.length.toLocaleString()} characters`;
+    if(f.kind === 'image') meta = 'Image';
+    div.innerHTML = `
+      ${thumb}
+      <div class="info">
+        <div class="name">#${i+1} — ${f.name}</div>
+        <div class="meta">${meta}</div>
+      </div>
+      <div class="order-btns">
+        <button title="Move up" data-act="left" data-id="${f.id}">←</button>
+        <button title="Move down" data-act="right" data-id="${f.id}">→</button>
+        <button title="Remove" data-act="remove" data-id="${f.id}">✕</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+  convertBtn.disabled = items.length === 0;
+  statusEl.textContent = items.length ? `${items.length} file${items.length>1?'s':''} ready` : '';
+}
+
+list.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  const id = Number(btn.dataset.id);
+  const idx = items.findIndex(f => f.id === id);
+  if(idx === -1) return;
+  if(btn.dataset.act === 'remove'){
+    items.splice(idx, 1);
+  } else if(btn.dataset.act === 'left' && idx > 0){
+    [items[idx-1], items[idx]] = [items[idx], items[idx-1]];
+  } else if(btn.dataset.act === 'right' && idx < items.length-1){
+    [items[idx+1], items[idx]] = [items[idx], items[idx+1]];
+  }
+  render();
+});
+
+convertBtn.addEventListener('click', async () => {
+  if(items.length === 0) return;
+  convertBtn.disabled = true;
+  errorEl.textContent = '';
+  statusEl.textContent = 'Building your PDF…';
+
+  const pageSizeChoice = document.getElementById('pageSize').value;
+  const orientation = document.getElementById('orientation').value;
+  const margin = Number(document.getElementById('margin').value);
+
+  const pdf = new jsPDF({ orientation, unit: 'pt', format: pageSizeChoice });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  let firstPage = true;
+
+  for(let i=0; i<items.length; i++){
+    const item = items[i];
+    statusEl.textContent = `Processing file ${i+1} of ${items.length}…`;
+    if(!firstPage) pdf.addPage(pageSizeChoice, orientation);
+    firstPage = false;
+
+    if(item.kind === 'image'){
+      const img = await loadImage(item.dataUrl);
+      const availW = pageW - margin*2;
+      const availH = pageH - margin*2;
+      const scale = Math.min(availW / img.naturalWidth, availH / img.naturalHeight);
+      const drawW = img.naturalWidth * scale;
+      const drawH = img.naturalHeight * scale;
+      const x = (pageW - drawW) / 2;
+      const y = (pageH - drawH) / 2;
+      const format = item.dataUrl.includes('image/png') ? 'PNG' : 'JPEG';
+      pdf.addImage(item.dataUrl, format, x, y, drawW, drawH);
+    } else if(item.kind === 'text'){
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(11);
+      const availW = pageW - margin*2;
+      const lines = pdf.splitTextToSize(item.textContent, availW);
+      let y = margin;
+      const lineHeight = 14;
+      for(const line of lines){
+        if(y > pageH - margin){
+          pdf.addPage(pageSizeChoice, orientation);
+          y = margin;
+        }
+        pdf.text(line, margin, y);
+        y += lineHeight;
+      }
+    } else if(item.kind === 'sheet'){
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(13);
+      pdf.text(item.name.replace(/\.(xlsx|xls|csv)$/i,''), margin, margin);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      const availW = pageW - margin*2;
+      const rows = item.sheetData;
+      const colCount = Math.max(1, ...rows.map(r => r.length));
+      const colWidth = availW / colCount;
+      let y = margin + 22;
+      const rowHeight = 16;
+      for(const row of rows){
+        if(y > pageH - margin){
+          pdf.addPage(pageSizeChoice, orientation);
+          y = margin;
+        }
+        for(let c=0; c<colCount; c++){
+          const cellText = (row[c] !== undefined && row[c] !== null) ? String(row[c]) : '';
+          const clipped = pdf.splitTextToSize(cellText, colWidth - 6)[0] || '';
+          pdf.text(clipped, margin + c*colWidth, y);
+        }
+        pdf.setDrawColor(220,220,220);
+        pdf.line(margin, y+4, pageW-margin, y+4);
+        y += rowHeight;
+      }
+    }
+  }
+
+  pdf.save('krunto-files.pdf');
+  statusEl.textContent = 'Done — your PDF has downloaded.';
+  convertBtn.disabled = false;
+});
+
+function loadImage(src){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+</script>
+
+</body>
+</html>
